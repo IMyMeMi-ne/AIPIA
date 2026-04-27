@@ -15,8 +15,6 @@ dist-ssr
 .codex/
 .claude/
 
-docs/
-
 .vscode/*
 !.vscode/extensions.json
 .idea
