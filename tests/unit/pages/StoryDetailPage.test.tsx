@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useQuery } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,6 +10,7 @@ import {
   querySuccess,
 } from '../../utils/react-query.ts';
 import { makeStory } from '../../utils/stories.ts';
+import { renderWithTheme } from '../../utils/react.tsx';
 
 const routerMocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -61,7 +62,7 @@ describe('스토리 상세 페이지', () => {
       setStoryId(storyId);
       vi.mocked(useQuery).mockReturnValue(queryIdle());
 
-      render(<StoryDetailPage />);
+      renderWithTheme(<StoryDetailPage />);
 
       expect(screen.getByRole('alert')).toHaveTextContent('Invalid story ID');
       expect(
@@ -79,7 +80,7 @@ describe('스토리 상세 페이지', () => {
     setStoryId('123');
     vi.mocked(useQuery).mockReturnValue(queryLoading());
 
-    render(<StoryDetailPage />);
+    renderWithTheme(<StoryDetailPage />);
 
     expect(screen.getByRole('status')).toHaveTextContent(
       'Loading story detail...',
@@ -92,7 +93,7 @@ describe('스토리 상세 페이지', () => {
       querySuccess(makeStory({ id: 123, title: 'Loaded story', by: 'erin' })),
     );
 
-    render(<StoryDetailPage />);
+    renderWithTheme(<StoryDetailPage />);
 
     expect(screen.getByText('Story #123')).toBeInTheDocument();
     expect(
@@ -105,7 +106,7 @@ describe('스토리 상세 페이지', () => {
     setStoryId('123');
     vi.mocked(useQuery).mockReturnValue(querySuccess(null));
 
-    render(<StoryDetailPage />);
+    renderWithTheme(<StoryDetailPage />);
 
     expect(screen.getByText('Story unavailable')).toBeInTheDocument();
     expect(
@@ -121,7 +122,7 @@ describe('스토리 상세 페이지', () => {
     setStoryId('123');
     vi.mocked(useQuery).mockReturnValue(queryError(new Error('detail exploded'), refetch));
 
-    render(<StoryDetailPage />);
+    renderWithTheme(<StoryDetailPage />);
 
     expect(screen.getByRole('alert')).toHaveTextContent('Could not load story');
     expect(screen.getByText('detail exploded')).toBeInTheDocument();
@@ -136,7 +137,7 @@ describe('스토리 상세 페이지', () => {
     setStoryId('123');
     vi.mocked(useQuery).mockReturnValue(querySuccess(makeStory({ id: 123 })));
 
-    render(<StoryDetailPage />);
+    renderWithTheme(<StoryDetailPage />);
 
     await user.click(screen.getByRole('button', { name: 'AIPIA News' }));
     expect(routerMocks.navigate).toHaveBeenCalledWith('/');

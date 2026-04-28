@@ -8,6 +8,7 @@ import { EmptyState } from '@/shared/ui/EmptyState.tsx';
 import { ErrorState } from '@/shared/ui/ErrorState.tsx';
 import { PageShell } from '@/shared/ui/PageShell.tsx';
 import { Surface } from '@/shared/ui/Surface.tsx';
+import { ThemeToggle } from '@/shared/ui/ThemeToggle.tsx';
 
 function parseStoryId(storyId: string | undefined) {
   if (storyId === undefined || storyId.trim().length === 0) {
@@ -39,7 +40,11 @@ function StoryDetailPage() {
   });
 
   return (
-    <PageShell onTitleClick={() => navigate('/')} title="AIPIA News">
+    <PageShell
+      titleActions={<ThemeToggle />}
+      onTitleClick={() => navigate('/')}
+      title="AIPIA News"
+    >
       {storyId === null ? (
         <Surface className="p-4 sm:p-6" elevated>
           <ErrorState

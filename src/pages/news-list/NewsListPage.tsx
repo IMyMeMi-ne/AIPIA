@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/Button.tsx';
 import { ErrorState } from '@/shared/ui/ErrorState.tsx';
 import { PageShell } from '@/shared/ui/PageShell.tsx';
 import { Surface } from '@/shared/ui/Surface.tsx';
+import { ThemeToggle } from '@/shared/ui/ThemeToggle.tsx';
 
 const feedHeadings: Record<FeedType, string> = {
   top: 'Top Stories',
@@ -28,9 +29,8 @@ function NewsListPage() {
 
   return (
     <PageShell
-      actions={
-        <FeedTabs onSelectFeed={setSelectedFeed} selectedFeed={selectedFeed} />
-      }
+      actions={<FeedTabs onSelectFeed={setSelectedFeed} selectedFeed={selectedFeed} />}
+      titleActions={<ThemeToggle />}
       descriptionClassName="hidden lg:block"
       eyebrowClassName="hidden lg:block"
       title="AIPIA News"

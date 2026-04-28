@@ -33,7 +33,7 @@ function StoryMeta({ story }: { story: HackerNewsStory }) {
 
 function FeaturedStoryCard({ story }: { story: HackerNewsStory }) {
   return (
-    <Surface className="group overflow-hidden border-(--ds-color-border) bg-(--ds-color-surface) shadow-[0_18px_50px_rgb(21_23_26/0.10)]">
+    <Surface className="group overflow-hidden border-(--ds-color-border) bg-(--ds-color-surface) shadow-(--ds-shadow-featured-card)">
       <Link
         aria-label={`Read story: ${story.title}`}
         className="block rounded-[inherit]"
@@ -55,8 +55,8 @@ function FeaturedStoryCard({ story }: { story: HackerNewsStory }) {
             }}
             src={buildStoryThumbnailUrl(story.id)}
           />
-          <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/35 to-transparent p-4 pt-16 text-white">
-            <div className="mb-2 flex items-center gap-2 text-[0.6875rem] font-bold uppercase tracking-[0.18em] text-white/80">
+          <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/35 to-transparent p-4 pt-16 text-(--ds-color-on-image)">
+            <div className="mb-2 flex items-center gap-2 text-[0.6875rem] font-bold uppercase tracking-[0.18em] text-(--ds-color-on-image-muted)">
               <span className="h-px w-7 bg-(--ds-color-accent)" />
               <span>Lead story</span>
             </div>

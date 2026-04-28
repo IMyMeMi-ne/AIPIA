@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
+import { ThemeProvider } from '@/shared/theme/index.ts'
 import type { ReactElement, ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -24,7 +25,11 @@ export function renderWithRouter(
   ui: ReactElement,
   { route = '/' }: RenderWithRouterOptions = {},
 ) {
-  return render(<MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>)
+  return render(
+    <ThemeProvider>
+      <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+    </ThemeProvider>,
+  )
 }
 
 type RenderWithProvidersOptions = RenderWithRouterOptions & {
@@ -37,9 +42,11 @@ export function renderWithProviders(
 ) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
     )
   }
 
@@ -47,4 +54,8 @@ export function renderWithProviders(
     queryClient,
     ...render(ui, { wrapper: Wrapper }),
   }
+}
+
+export function renderWithTheme(ui: ReactElement) {
+  return render(<ThemeProvider>{ui}</ThemeProvider>)
 }

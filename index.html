@@ -4,6 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AIPIA News</title>
+    <script>
+      (() => {
+        const storageKey = 'aipia-theme-preference';
+        let storedPreference;
+
+        try {
+          storedPreference = window.localStorage.getItem(storageKey);
+        } catch {
+          storedPreference = undefined;
+        }
+
+        const resolvedTheme = storedPreference === 'dark' ? 'dark' : 'light';
+
+        document.documentElement.dataset.theme = resolvedTheme;
+        document.documentElement.style.colorScheme = resolvedTheme;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

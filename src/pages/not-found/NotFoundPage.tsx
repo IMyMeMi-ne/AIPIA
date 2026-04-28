@@ -2,12 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { ErrorState } from '@/shared/ui/ErrorState.tsx';
 import { PageShell } from '@/shared/ui/PageShell.tsx';
 import { Surface } from '@/shared/ui/Surface.tsx';
+import { ThemeToggle } from '@/shared/ui/ThemeToggle.tsx';
 
 function NotFoundPage() {
   const navigate = useNavigate();
 
   return (
     <PageShell
+      titleActions={<ThemeToggle />}
       description="The requested route does not exist."
       onTitleClick={() => navigate('/')}
       title="AIPIA News"

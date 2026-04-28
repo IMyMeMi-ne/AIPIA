@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import NotFoundPage from '@/pages/not-found/NotFoundPage.tsx'
+import { renderWithTheme } from '../../utils/react.tsx'
 
 const navigateMock = vi.hoisted(() => vi.fn())
 
@@ -18,7 +19,7 @@ describe('없는 페이지 화면', () => {
   it('사용할 수 없는 라우트 안내를 보여주고 제목 클릭 시 홈으로 이동한다', async () => {
     const user = userEvent.setup()
 
-    render(<NotFoundPage />)
+    renderWithTheme(<NotFoundPage />)
 
     expect(screen.getByText('The requested route does not exist.')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('Route unavailable')

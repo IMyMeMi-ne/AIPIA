@@ -16,17 +16,17 @@ function StoryMetaSkeleton() {
 
 function FeaturedStoryCardSkeleton() {
   return (
-    <Surface className="overflow-hidden border-(--ds-color-border) bg-(--ds-color-surface) shadow-[0_18px_50px_rgb(21_23_26/0.10)]">
+    <Surface className="overflow-hidden border-(--ds-color-border) bg-(--ds-color-surface) shadow-(--ds-shadow-featured-card)">
       <div className="relative aspect-[1.18] overflow-hidden bg-(--ds-color-surface-muted)">
         <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
         <div className="absolute inset-x-0 bottom-0 space-y-3 bg-linear-to-t from-black/25 via-black/10 to-transparent p-4 pt-16">
           <div className="flex items-center gap-2">
-            <Skeleton className="h-px w-7 bg-white/45" />
-            <Skeleton className="h-3 w-24 bg-white/45" />
+            <Skeleton className="h-px w-7 bg-[var(--ds-color-on-image-skeleton-muted)]" />
+            <Skeleton className="h-3 w-24 bg-[var(--ds-color-on-image-skeleton-muted)]" />
           </div>
           <div className="space-y-2">
-            <Skeleton className="h-7 w-11/12 bg-white/55" />
-            <Skeleton className="h-7 w-4/5 bg-white/55" />
+            <Skeleton className="h-7 w-11/12 bg-[var(--ds-color-on-image-skeleton)]" />
+            <Skeleton className="h-7 w-4/5 bg-[var(--ds-color-on-image-skeleton)]" />
           </div>
         </div>
       </div>
