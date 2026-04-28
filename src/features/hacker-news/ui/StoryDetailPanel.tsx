@@ -11,6 +11,10 @@ const UNKNOWN_AUTHOR_LABEL = 'Unknown author'
 const UNKNOWN_SCORE_LABEL = 'Score unavailable'
 const detailItemClassName =
   'min-w-0 rounded-[var(--ds-radius-card)] border border-[var(--ds-color-border)] bg-[var(--ds-color-surface-muted)] p-4'
+const sourceActionClassName =
+  'inline-flex min-h-10 w-full items-center justify-center rounded-(--ds-radius-control) bg-app-foreground px-4 text-sm font-semibold text-app-background transition-colors hover:bg-app-muted sm:w-auto'
+const unavailableSourceClassName =
+  'inline-flex min-h-10 w-full items-center justify-center rounded-(--ds-radius-control) border border-dashed border-(--ds-color-border) bg-(--ds-color-surface-muted) px-4 text-sm font-semibold text-app-muted sm:w-auto'
 
 function formatScore(score: HackerNewsStory['score']) {
   if (typeof score !== 'number' || !Number.isFinite(score)) {
@@ -81,7 +85,7 @@ function StoryDetailPanel({ story }: StoryDetailPanelProps) {
             <div className="shrink-0">
               {hasSourceUrl ? (
                 <a
-                  className="inline-flex min-h-10 w-full items-center justify-center rounded-(--ds-radius-control) bg-(--ds-color-accent) px-4 text-sm font-semibold text-(--ds-color-accent-foreground)sition-colors hover:bg-(--ds-color-accent-hover) sm:w-auto"
+                  className={sourceActionClassName}
                   href={sourceUrl}
                   rel="noopener noreferrer"
                   target="_blank"
@@ -90,7 +94,7 @@ function StoryDetailPanel({ story }: StoryDetailPanelProps) {
                   Open original story
                 </a>
               ) : (
-                <span className="inline-flex min-h-10 w-full items-center justify-center rounded-(--ds-radius-control) border border-dashed border-(--ds-color-border) bg-(--ds-color-surface-muted) px-4 text-sm font-semibold text-app-muted sm:w-auto">
+                <span className={unavailableSourceClassName}>
                   {NO_SOURCE_URL_LABEL}
                 </span>
               )}

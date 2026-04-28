@@ -13,11 +13,20 @@ const feedLabels: Record<FeedType, string> = {
   best: 'Best',
 }
 
+const baseTabClassName =
+  'min-h-9 min-w-0 rounded-none border-b-2 px-0 text-lg shadow-none hover:bg-transparent lg:min-h-10 lg:rounded-(--ds-radius-control) lg:border lg:px-4 lg:text-sm'
+
+const selectedTabClassName =
+  'border-app-foreground bg-transparent text-app-foreground lg:border-(--ds-color-border) lg:bg-(--ds-color-surface) lg:shadow-[0_1px_2px_rgb(21_23_26/0.06)] lg:hover:bg-(--ds-color-surface)'
+
+const idleTabClassName =
+  'border-transparent bg-transparent text-app-muted hover:text-app-foreground lg:text-app-muted lg:hover:bg-(--ds-color-surface) lg:hover:text-app-foreground'
+
 function FeedTabs({ selectedFeed, onSelectFeed }: FeedTabsProps) {
   return (
     <div
       aria-label="Story feed"
-      className="grid w-full grid-cols-3 gap-2 rounded-(--ds-radius-card) border border-(--ds-color-border) bg-(--ds-color-surface) p-1 sm:flex sm:w-auto sm:flex-wrap"
+      className="flex w-full gap-8 bg-transparent p-0 lg:grid lg:w-auto lg:grid-cols-3 lg:gap-1.5 lg:rounded-(--ds-radius-card) lg:border lg:border-(--ds-color-border) lg:bg-(--ds-color-surface-muted) lg:p-1"
       role="group"
     >
       {FEED_TYPES.map((feedType) => {
@@ -28,12 +37,12 @@ function FeedTabs({ selectedFeed, onSelectFeed }: FeedTabsProps) {
             aria-pressed={isSelected}
             className={
               isSelected
-                ? 'min-w-0 whitespace-nowrap shadow-sm'
-                : 'min-w-0 whitespace-nowrap border-transparent bg-transparent text-app-muted shadow-none hover:text-app-foreground'
+                ? `${baseTabClassName} ${selectedTabClassName}`
+                : `${baseTabClassName} ${idleTabClassName}`
             }
             key={feedType}
             onClick={() => onSelectFeed(feedType)}
-            variant={isSelected ? 'primary' : 'secondary'}
+            variant="ghost"
           >
             {feedLabels[feedType]}
           </Button>

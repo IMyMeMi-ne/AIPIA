@@ -1,55 +1,64 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { feedStoriesQueryOptions } from '../../features/hacker-news/api/queries.ts'
-import FeedTabs from '../../features/hacker-news/ui/FeedTabs.tsx'
-import StoryGrid from '../../features/hacker-news/ui/StoryGrid.tsx'
-import type { FeedType } from '../../features/hacker-news/model/types.ts'
-import { Badge } from '../../shared/ui/Badge.tsx'
-import { Button } from '../../shared/ui/Button.tsx'
-import { ErrorState } from '../../shared/ui/ErrorState.tsx'
-import { LoadingState } from '../../shared/ui/LoadingState.tsx'
-import { PageShell } from '../../shared/ui/PageShell.tsx'
-import { Surface } from '../../shared/ui/Surface.tsx'
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { feedStoriesQueryOptions } from '../../features/hacker-news/api/queries.ts';
+import FeedTabs from '../../features/hacker-news/ui/FeedTabs.tsx';
+import StoryGrid from '../../features/hacker-news/ui/StoryGrid.tsx';
+import type { FeedType } from '../../features/hacker-news/model/types.ts';
+import { Button } from '../../shared/ui/Button.tsx';
+import { ErrorState } from '../../shared/ui/ErrorState.tsx';
+import { LoadingState } from '../../shared/ui/LoadingState.tsx';
+import { PageShell } from '../../shared/ui/PageShell.tsx';
+import { Surface } from '../../shared/ui/Surface.tsx';
 
 const feedHeadings: Record<FeedType, string> = {
   top: 'Top Stories',
   new: 'New Stories',
   best: 'Best Stories',
-}
+};
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Story feed could not be loaded.'
+  return error instanceof Error
+    ? error.message
+    : 'Story feed could not be loaded.';
 }
 
 function NewsListPage() {
-  const [selectedFeed, setSelectedFeed] = useState<FeedType>('top')
-  const feedStoriesQuery = useQuery(feedStoriesQueryOptions(selectedFeed))
+  const [selectedFeed, setSelectedFeed] = useState<FeedType>('top');
+  const feedStoriesQuery = useQuery(feedStoriesQueryOptions(selectedFeed));
 
   return (
     <PageShell
-      actions={<FeedTabs onSelectFeed={setSelectedFeed} selectedFeed={selectedFeed} />}
-      description="Browse Hacker News stories by feed. Choose Top, New, or Best to refresh the board."
-      eyebrow={<Badge variant="accent">Hacker News board</Badge>}
+      actions={
+        <FeedTabs onSelectFeed={setSelectedFeed} selectedFeed={selectedFeed} />
+      }
+      descriptionClassName="hidden lg:block"
+      eyebrowClassName="hidden lg:block"
       title="AIPIA News"
     >
-      <Surface className="overflow-hidden" elevated>
-        <div className="flex flex-col gap-2 border-b border-(--ds-color-border) bg-(--ds-color-surface) p-4 sm:p-5">
+      <Surface
+        className="border-0 bg-transparent shadow-none lg:overflow-hidden lg:border lg:border-(--ds-color-border) lg:bg-(--ds-color-surface) lg:shadow-(--ds-shadow-card)"
+        elevated
+      >
+        <div className="hidden flex-col gap-2 border-b border-(--ds-color-border) bg-(--ds-color-surface) p-4 lg:flex lg:p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge>Feed</Badge>
-            <h2 className="m-0 text-xl font-bold text-app-foreground">{feedHeadings[selectedFeed]}</h2>
+            <h2 className="m-0 text-xl font-bold text-app-foreground">
+              {feedHeadings[selectedFeed]}
+            </h2>
           </div>
-          <p className="m-0 max-w-(--ds-layout-readable-max) text-sm text-app-muted">
-            Showing displayable stories only. Some unavailable items may be skipped.
-          </p>
         </div>
 
-        <div className="p-4 sm:p-5 lg:p-6">
-          {feedStoriesQuery.isLoading ? <LoadingState label="Loading stories..." /> : null}
+        <div className="p-0 lg:p-6">
+          {feedStoriesQuery.isLoading ? (
+            <LoadingState label="Loading stories..." />
+          ) : null}
 
           {feedStoriesQuery.isError ? (
             <ErrorState
               action={
-                <Button onClick={() => void feedStoriesQuery.refetch()} variant="secondary">
+                <Button
+                  onClick={() => void feedStoriesQuery.refetch()}
+                  variant="secondary"
+                >
                   Try again
                 </Button>
               }
@@ -58,11 +67,13 @@ function NewsListPage() {
             />
           ) : null}
 
-          {feedStoriesQuery.isSuccess ? <StoryGrid stories={feedStoriesQuery.data} /> : null}
+          {feedStoriesQuery.isSuccess ? (
+            <StoryGrid stories={feedStoriesQuery.data} />
+          ) : null}
         </div>
       </Surface>
     </PageShell>
-  )
+  );
 }
 
-export default NewsListPage
+export default NewsListPage;

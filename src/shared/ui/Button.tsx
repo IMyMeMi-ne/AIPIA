@@ -11,7 +11,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-[var(--ds-color-accent)] text-[var(--ds-color-accent-foreground)] hover:bg-[var(--ds-color-accent-hover)]',
+    'bg-app-foreground text-app-background hover:bg-app-muted',
   secondary:
     'border border-[var(--ds-color-border)] bg-[var(--ds-color-surface)] text-app-foreground hover:bg-[var(--ds-color-surface-muted)]',
   ghost: 'text-app-foreground hover:bg-[var(--ds-color-surface-muted)]',
