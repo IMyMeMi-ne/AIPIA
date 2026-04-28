@@ -86,7 +86,7 @@ function StoryGridSkeleton() {
     <div aria-live="polite" role="status">
       <span className="sr-only">Loading stories...</span>
 
-      <div className="lg:hidden">
+      <div aria-hidden="true" className="lg:hidden">
         <FeaturedStoryCardSkeleton />
         <div className="mt-3 divide-y divide-(--ds-color-border) border-y border-(--ds-color-border)">
           {Array.from({ length: COMPACT_STORY_SKELETON_COUNT }, (_, index) => (
@@ -95,7 +95,10 @@ function StoryGridSkeleton() {
         </div>
       </div>
 
-      <div className="hidden grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-5 lg:grid">
+      <div
+        aria-hidden="true"
+        className="hidden grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-5 lg:grid"
+      >
         {Array.from({ length: DESKTOP_STORY_SKELETON_COUNT }, (_, index) => (
           <DesktopStoryCardSkeleton key={index} />
         ))}
