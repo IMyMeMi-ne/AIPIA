@@ -2,10 +2,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { storyDetailQueryOptions } from '@/features/hacker-news/api/queries.ts';
 import StoryDetailPanel from '@/features/hacker-news/ui/StoryDetailPanel.tsx';
+import StoryDetailSkeleton from '@/features/hacker-news/ui/StoryDetailSkeleton.tsx';
 import { Button } from '@/shared/ui/Button.tsx';
 import { EmptyState } from '@/shared/ui/EmptyState.tsx';
 import { ErrorState } from '@/shared/ui/ErrorState.tsx';
-import { LoadingState } from '@/shared/ui/LoadingState.tsx';
 import { PageShell } from '@/shared/ui/PageShell.tsx';
 import { Surface } from '@/shared/ui/Surface.tsx';
 
@@ -50,9 +50,7 @@ function StoryDetailPage() {
       ) : null}
 
       {storyId !== null && storyDetailQuery.isLoading ? (
-        <Surface className="p-4 sm:p-6" elevated>
-          <LoadingState label="Loading story detail..." />
-        </Surface>
+        <StoryDetailSkeleton />
       ) : null}
 
       {storyId !== null && storyDetailQuery.isError ? (
