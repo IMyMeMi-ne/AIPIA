@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { feedStoriesQueryOptions } from '../../features/hacker-news/api/queries.ts';
-import FeedTabs from '../../features/hacker-news/ui/FeedTabs.tsx';
-import StoryGrid from '../../features/hacker-news/ui/StoryGrid.tsx';
-import StoryGridSkeleton from '../../features/hacker-news/ui/StoryGridSkeleton.tsx';
-import type { FeedType } from '../../features/hacker-news/model/types.ts';
-import { Button } from '../../shared/ui/Button.tsx';
-import { ErrorState } from '../../shared/ui/ErrorState.tsx';
-import { PageShell } from '../../shared/ui/PageShell.tsx';
-import { Surface } from '../../shared/ui/Surface.tsx';
+import { feedStoriesQueryOptions } from '@/features/hacker-news/api/queries.ts';
+import FeedTabs from '@/features/hacker-news/ui/FeedTabs.tsx';
+import StoryGrid from '@/features/hacker-news/ui/StoryGrid.tsx';
+import StoryGridSkeleton from '@/features/hacker-news/ui/StoryGridSkeleton.tsx';
+import type { FeedType } from '@/features/hacker-news/model/types.ts';
+import { Button } from '@/shared/ui/Button.tsx';
+import { ErrorState } from '@/shared/ui/ErrorState.tsx';
+import { PageShell } from '@/shared/ui/PageShell.tsx';
+import { Surface } from '@/shared/ui/Surface.tsx';
 
 const feedHeadings: Record<FeedType, string> = {
   top: 'Top Stories',
@@ -48,9 +48,7 @@ function NewsListPage() {
         </div>
 
         <div className="p-0 lg:p-6">
-          {feedStoriesQuery.isLoading ? (
-            <StoryGridSkeleton />
-          ) : null}
+          {feedStoriesQuery.isLoading ? <StoryGridSkeleton /> : null}
 
           {feedStoriesQuery.isError ? (
             <ErrorState

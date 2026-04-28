@@ -1,19 +1,22 @@
-import { Link } from 'react-router-dom'
-import { formatUnixSecondsDate } from '../../../shared/lib/date.ts'
-import { Surface } from '../../../shared/ui/Surface.tsx'
-import { buildStoryThumbnailUrl } from '../lib/story.ts'
-import type { HackerNewsStory } from '../model/types.ts'
+import { Link } from 'react-router-dom';
+import { formatUnixSecondsDate } from '@/../shared/lib/date.ts';
+import { Surface } from '@/../shared/ui/Surface.tsx';
+import { buildStoryThumbnailUrl } from '../lib/story.ts';
+import type { HackerNewsStory } from '../model/types.ts';
 
-type StoryCardVariant = 'compact' | 'desktop' | 'featured'
+type StoryCardVariant = 'compact' | 'desktop' | 'featured';
 
 type StoryCardProps = {
-  story: HackerNewsStory
-  variant?: StoryCardVariant
-}
+  story: HackerNewsStory;
+  variant?: StoryCardVariant;
+};
 
 function StoryMeta({ story }: { story: HackerNewsStory }) {
-  const dateLabel = formatUnixSecondsDate(story.time)
-  const dateTime = typeof story.time === 'number' ? new Date(story.time * 1000).toISOString() : undefined
+  const dateLabel = formatUnixSecondsDate(story.time);
+  const dateTime =
+    typeof story.time === 'number'
+      ? new Date(story.time * 1000).toISOString()
+      : undefined;
 
   return (
     <p className="m-0 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-app-muted">
@@ -25,7 +28,7 @@ function StoryMeta({ story }: { story: HackerNewsStory }) {
       </span>
       <time dateTime={dateTime}>{dateLabel}</time>
     </p>
-  )
+  );
 }
 
 function FeaturedStoryCard({ story }: { story: HackerNewsStory }) {
@@ -48,7 +51,7 @@ function FeaturedStoryCard({ story }: { story: HackerNewsStory }) {
             className="relative h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025] group-focus-within:scale-[1.025]"
             loading="eager"
             onError={(event) => {
-              event.currentTarget.style.display = 'none'
+              event.currentTarget.style.display = 'none';
             }}
             src={buildStoryThumbnailUrl(story.id)}
           />
@@ -67,7 +70,7 @@ function FeaturedStoryCard({ story }: { story: HackerNewsStory }) {
         </article>
       </Link>
     </Surface>
-  )
+  );
 }
 
 function CompactStoryCard({ story }: { story: HackerNewsStory }) {
@@ -90,7 +93,7 @@ function CompactStoryCard({ story }: { story: HackerNewsStory }) {
             className="relative h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] group-focus-within:scale-[1.04]"
             loading="lazy"
             onError={(event) => {
-              event.currentTarget.style.display = 'none'
+              event.currentTarget.style.display = 'none';
             }}
             src={buildStoryThumbnailUrl(story.id)}
           />
@@ -105,7 +108,7 @@ function CompactStoryCard({ story }: { story: HackerNewsStory }) {
         </div>
       </article>
     </Link>
-  )
+  );
 }
 
 function DesktopStoryCard({ story }: { story: HackerNewsStory }) {
@@ -128,7 +131,7 @@ function DesktopStoryCard({ story }: { story: HackerNewsStory }) {
             className="relative h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02] group-focus-within:scale-[1.02]"
             loading="lazy"
             onError={(event) => {
-              event.currentTarget.style.display = 'none'
+              event.currentTarget.style.display = 'none';
             }}
             src={buildStoryThumbnailUrl(story.id)}
           />
@@ -139,7 +142,9 @@ function DesktopStoryCard({ story }: { story: HackerNewsStory }) {
           </h2>
           <dl className="mt-auto grid gap-2 border-t border-(--ds-color-border) pt-3 text-sm text-app-muted">
             <div className="flex min-w-0 items-baseline gap-2">
-              <dt className="shrink-0 text-xs font-semibold uppercase tracking-wide text-app-muted">By</dt>
+              <dt className="shrink-0 text-xs font-semibold uppercase tracking-wide text-app-muted">
+                By
+              </dt>
               <dd className="m-0 min-w-0 truncate font-medium text-app-foreground">
                 {story.by ?? 'Unknown author'}
               </dd>
@@ -148,25 +153,27 @@ function DesktopStoryCard({ story }: { story: HackerNewsStory }) {
               <dt className="shrink-0 text-xs font-semibold uppercase tracking-wide text-app-muted">
                 Date
               </dt>
-              <dd className="m-0 min-w-0 truncate">{formatUnixSecondsDate(story.time)}</dd>
+              <dd className="m-0 min-w-0 truncate">
+                {formatUnixSecondsDate(story.time)}
+              </dd>
             </div>
           </dl>
         </article>
       </Link>
     </Surface>
-  )
+  );
 }
 
 function StoryCard({ story, variant = 'desktop' }: StoryCardProps) {
   if (variant === 'featured') {
-    return <FeaturedStoryCard story={story} />
+    return <FeaturedStoryCard story={story} />;
   }
 
   if (variant === 'compact') {
-    return <CompactStoryCard story={story} />
+    return <CompactStoryCard story={story} />;
   }
 
-  return <DesktopStoryCard story={story} />
+  return <DesktopStoryCard story={story} />;
 }
 
-export default StoryCard
+export default StoryCard;

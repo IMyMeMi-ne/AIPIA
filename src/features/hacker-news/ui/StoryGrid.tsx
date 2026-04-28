@@ -1,12 +1,12 @@
-import { EmptyState } from '../../../shared/ui/EmptyState.tsx'
-import type { HackerNewsStory } from '../model/types.ts'
-import StoryCard from './StoryCard.tsx'
+import { EmptyState } from '@/../shared/ui/EmptyState.tsx';
+import type { HackerNewsStory } from '../model/types.ts';
+import StoryCard from './StoryCard.tsx';
 
-const FEATURED_STORY_INDEX = 0
+const FEATURED_STORY_INDEX = 0;
 
 type StoryGridProps = {
-  stories: HackerNewsStory[]
-}
+  stories: HackerNewsStory[];
+};
 
 function StoryGrid({ stories }: StoryGridProps) {
   if (stories.length === 0) {
@@ -15,11 +15,11 @@ function StoryGrid({ stories }: StoryGridProps) {
         message="There are no stories available for this feed right now."
         title="No stories found"
       />
-    )
+    );
   }
 
-  const featuredStory = stories[FEATURED_STORY_INDEX]
-  const streamStories = stories.slice(1)
+  const featuredStory = stories[FEATURED_STORY_INDEX];
+  const streamStories = stories.slice(1);
 
   return (
     <>
@@ -38,7 +38,7 @@ function StoryGrid({ stories }: StoryGridProps) {
         ))}
       </div>
     </>
-  )
+  );
 }
 
-export default StoryGrid
+export default StoryGrid;

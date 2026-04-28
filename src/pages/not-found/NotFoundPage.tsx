@@ -1,10 +1,10 @@
-import { useNavigate } from 'react-router-dom'
-import { ErrorState } from '../../shared/ui/ErrorState.tsx'
-import { PageShell } from '../../shared/ui/PageShell.tsx'
-import { Surface } from '../../shared/ui/Surface.tsx'
+import { useNavigate } from 'react-router-dom';
+import { ErrorState } from '@/shared/ui/ErrorState.tsx';
+import { PageShell } from '@/shared/ui/PageShell.tsx';
+import { Surface } from '@/shared/ui/Surface.tsx';
 
 function NotFoundPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <PageShell
@@ -19,7 +19,7 @@ function NotFoundPage() {
         />
       </Surface>
     </PageShell>
-  )
+  );
 }
 
-export default NotFoundPage
+export default NotFoundPage;
