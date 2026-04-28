@@ -9,6 +9,10 @@ import type {
 } from '../model/types.ts';
 import { getFeedEndpoint, isDisplayableStory } from '../lib/story.ts';
 
+export type HackerNewsApiRequestOptions = {
+  signal?: AbortSignal;
+};
+
 // API base URL과 endpoint path를 결합해 실제 요청 URL을 만듦
 function buildApiUrl(endpoint: string) {
   return `${HACKER_NEWS_API_BASE_URL}${endpoint}`;
@@ -24,16 +28,32 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
 
+// TanStack Query 취소 신호가 들어오면 목록 조회의 item 실패 처리에서 삼키지 않고 다시 전파
+function isAbortError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'name' in error &&
+    error.name === 'AbortError'
+  );
+}
+
+
 // 공통 JSON fetch helper: 네트워크, HTTP 상태, JSON 파싱 실패를 명확한 Error로 변경
 async function fetchJson(
   endpoint: string,
   resourceName: string,
+  options: HackerNewsApiRequestOptions = {},
 ): Promise<unknown> {
   let response: Response;
 
   try {
-    response = await fetch(buildApiUrl(endpoint));
+    response = await fetch(buildApiUrl(endpoint), { signal: options.signal });
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
+
     throw new Error(
       `${resourceName} 조회에 실패했습니다: ${getErrorMessage(error)}`,
       {
@@ -51,6 +71,10 @@ async function fetchJson(
   try {
     return await response.json();
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
+
     throw new Error(
       `${resourceName} 응답 파싱에 실패했습니다: ${getErrorMessage(error)}`,
       {
@@ -100,10 +124,14 @@ function toHackerNewsItem(
   return item as HackerNewsItem;
 }
 
-export async function fetchStoryIds(feedType: FeedType) {
+export async function fetchStoryIds(
+  feedType: FeedType,
+  options: HackerNewsApiRequestOptions = {},
+) {
   const response = await fetchJson(
     getFeedEndpoint(feedType),
     `${feedType} story id 목록`,
+    options,
   );
 
   if (!isStoryIdList(response)) {
@@ -115,17 +143,21 @@ export async function fetchStoryIds(feedType: FeedType) {
   return response;
 }
 
-export async function fetchItem(id: HackerNewsItem['id']) {
+export async function fetchItem(
+  id: HackerNewsItem['id'],
+  options: HackerNewsApiRequestOptions = {},
+) {
   const resourceName = `Hacker News item ${id}`;
-  const response = await fetchJson(getItemEndpoint(id), resourceName);
+  const response = await fetchJson(getItemEndpoint(id), resourceName, options);
 
   return toHackerNewsItem(response, resourceName);
 }
 
 export async function fetchStory(
   id: HackerNewsItem['id'],
+  options: HackerNewsApiRequestOptions = {},
 ): Promise<HackerNewsStory | null> {
-  const item = await fetchItem(id);
+  const item = await fetchItem(id, options);
 
   return isDisplayableStory(item) ? item : null;
 }
@@ -133,15 +165,20 @@ export async function fetchStory(
 export async function fetchStories(
   feedType: FeedType,
   limit = INITIAL_STORY_LIMIT,
+  options: HackerNewsApiRequestOptions = {},
 ): Promise<HackerNewsStory[]> {
-  const storyIds = await fetchStoryIds(feedType);
+  const storyIds = await fetchStoryIds(feedType, options);
   const limitedStoryIds = storyIds.slice(0, normalizeLimit(limit));
 
   const stories = await Promise.all(
     limitedStoryIds.map(async (storyId) => {
       try {
-        return await fetchStory(storyId);
-      } catch {
+        return await fetchStory(storyId, options);
+      } catch (error) {
+        if (isAbortError(error)) {
+          throw error;
+        }
+
         return null;
       }
     }),
