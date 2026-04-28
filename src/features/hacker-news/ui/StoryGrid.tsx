@@ -1,4 +1,4 @@
-import { EmptyState } from '@/../shared/ui/EmptyState.tsx';
+import { EmptyState } from '@/shared/ui/EmptyState.tsx';
 import type { HackerNewsStory } from '../model/types.ts';
 import StoryCard from './StoryCard.tsx';
 

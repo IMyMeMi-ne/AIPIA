@@ -1,6 +1,6 @@
 import { FEED_TYPES } from '../model/types.ts';
 import type { FeedType } from '../model/types.ts';
-import { Button } from '@/../shared/ui/Button.tsx';
+import { Button } from '@/shared/ui/Button.tsx';
 
 type FeedTabsProps = {
   selectedFeed: FeedType;

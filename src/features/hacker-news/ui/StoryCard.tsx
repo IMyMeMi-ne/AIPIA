@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { formatUnixSecondsDate } from '@/../shared/lib/date.ts';
-import { Surface } from '@/../shared/ui/Surface.tsx';
+import { formatUnixSecondsDate } from '@/shared/lib/date.ts';
+import { Surface } from '@/shared/ui/Surface.tsx';
 import { buildStoryThumbnailUrl } from '../lib/story.ts';
 import type { HackerNewsStory } from '../model/types.ts';
 
