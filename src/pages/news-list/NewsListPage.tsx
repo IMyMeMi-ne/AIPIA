@@ -32,29 +32,34 @@ function NewsListPage() {
       eyebrow={<Badge variant="accent">Hacker News board</Badge>}
       title="AIPIA News"
     >
-      <Surface className="p-4 sm:p-6" elevated>
-        <div className="mb-5 flex flex-col gap-1">
-          <h2 className="m-0 text-xl font-bold text-app-foreground">{feedHeadings[selectedFeed]}</h2>
-          <p className="m-0 text-sm text-app-muted">
+      <Surface className="overflow-hidden" elevated>
+        <div className="flex flex-col gap-2 border-b border-(--ds-color-border) bg-(--ds-color-surface) p-4 sm:p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge>Feed</Badge>
+            <h2 className="m-0 text-xl font-bold text-app-foreground">{feedHeadings[selectedFeed]}</h2>
+          </div>
+          <p className="m-0 max-w-(--ds-layout-readable-max) text-sm text-app-muted">
             Showing displayable stories only. Some unavailable items may be skipped.
           </p>
         </div>
 
-        {feedStoriesQuery.isLoading ? <LoadingState label="Loading stories..." /> : null}
+        <div className="p-4 sm:p-5 lg:p-6">
+          {feedStoriesQuery.isLoading ? <LoadingState label="Loading stories..." /> : null}
 
-        {feedStoriesQuery.isError ? (
-          <ErrorState
-            action={
-              <Button onClick={() => void feedStoriesQuery.refetch()} variant="secondary">
-                Try again
-              </Button>
-            }
-            message={getErrorMessage(feedStoriesQuery.error)}
-            title="Could not load stories"
-          />
-        ) : null}
+          {feedStoriesQuery.isError ? (
+            <ErrorState
+              action={
+                <Button onClick={() => void feedStoriesQuery.refetch()} variant="secondary">
+                  Try again
+                </Button>
+              }
+              message={getErrorMessage(feedStoriesQuery.error)}
+              title="Could not load stories"
+            />
+          ) : null}
 
-        {feedStoriesQuery.isSuccess ? <StoryGrid stories={feedStoriesQuery.data} /> : null}
+          {feedStoriesQuery.isSuccess ? <StoryGrid stories={feedStoriesQuery.data} /> : null}
+        </div>
       </Surface>
     </PageShell>
   )

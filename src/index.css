@@ -19,7 +19,7 @@
     --ds-font-size-base: 1rem;
     --ds-font-size-lg: 1.125rem;
     --ds-font-size-xl: 1.5rem;
-    --ds-font-size-display: clamp(2rem, 5vw, 3.25rem);
+    --ds-font-size-display: clamp(1.875rem, 4vw, 2.5rem);
     --ds-line-height-tight: 1.15;
     --ds-line-height-base: 1.5;
 
@@ -30,10 +30,12 @@
     --ds-color-surface-muted: #eef2f5;
     --ds-color-border: #d7dde3;
     --ds-color-accent: #c4511e;
+    --ds-color-accent-soft: #fff1e8;
     --ds-color-accent-hover: #9f3f17;
     --ds-color-accent-foreground: #ffffff;
     --ds-color-danger: #b42318;
     --ds-color-success: #28794b;
+    --ds-color-success-soft: #e8f5ee;
     --ds-color-focus: #2563eb;
     --ds-color-selection: #fde8d7;
 

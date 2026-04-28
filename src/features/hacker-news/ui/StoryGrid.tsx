@@ -17,7 +17,7 @@ function StoryGrid({ stories }: StoryGridProps) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-4 lg:gap-5">
       {stories.map((story) => (
         <StoryCard key={story.id} story={story} />
       ))}

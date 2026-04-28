@@ -15,13 +15,22 @@ const feedLabels: Record<FeedType, string> = {
 
 function FeedTabs({ selectedFeed, onSelectFeed }: FeedTabsProps) {
   return (
-    <div aria-label="Story feed" className="flex flex-wrap gap-2" role="group">
+    <div
+      aria-label="Story feed"
+      className="grid w-full grid-cols-3 gap-2 rounded-(--ds-radius-card) border border-(--ds-color-border) bg-(--ds-color-surface) p-1 sm:flex sm:w-auto sm:flex-wrap"
+      role="group"
+    >
       {FEED_TYPES.map((feedType) => {
         const isSelected = feedType === selectedFeed
 
         return (
           <Button
             aria-pressed={isSelected}
+            className={
+              isSelected
+                ? 'min-w-0 whitespace-nowrap shadow-sm'
+                : 'min-w-0 whitespace-nowrap border-transparent bg-transparent text-app-muted shadow-none hover:text-app-foreground'
+            }
             key={feedType}
             onClick={() => onSelectFeed(feedType)}
             variant={isSelected ? 'primary' : 'secondary'}
