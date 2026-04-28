@@ -1,0 +1,179 @@
+import { describe, expect, it, vi } from 'vitest'
+import {
+  fetchItem,
+  fetchStories,
+  fetchStory,
+  fetchStoryIds,
+} from '@/features/hacker-news/api/hackerNewsApi.ts'
+import { HACKER_NEWS_API_BASE_URL, INITIAL_STORY_LIMIT } from '@/features/hacker-news/model/constants.ts'
+import type { HackerNewsItem } from '@/features/hacker-news/model/types.ts'
+
+function jsonResponse(body: unknown, init: ResponseInit = {}) {
+  return new Response(JSON.stringify(body), {
+    headers: { 'content-type': 'application/json' },
+    status: 200,
+    ...init,
+  })
+}
+
+function textResponse(body: string, init: ResponseInit = {}) {
+  return new Response(body, {
+    headers: { 'content-type': 'application/json' },
+    status: 200,
+    ...init,
+  })
+}
+
+function stubFetch(...responses: Array<Response | Promise<Response>>) {
+  const fetchMock = vi.fn<typeof fetch>()
+
+  responses.forEach((response) => {
+    fetchMock.mockImplementationOnce(() => Promise.resolve(response))
+  })
+
+  vi.stubGlobal('fetch', fetchMock)
+
+  return fetchMock
+}
+
+function abortError() {
+  return Object.assign(new Error('aborted'), { name: 'AbortError' })
+}
+
+const storyItem: HackerNewsItem = {
+  id: 101,
+  type: 'story',
+  title: 'Displayable story',
+}
+
+describe('스토리 식별자 목록 조회', () => {
+  it('선택한 피드 엔드포인트에서 스토리 식별자를 가져온다', async () => {
+    const fetchMock = stubFetch(jsonResponse([1, 2, 3]))
+
+    await expect(fetchStoryIds('top')).resolves.toEqual([1, 2, 3])
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${HACKER_NEWS_API_BASE_URL}/topstories.json`,
+      { signal: undefined },
+    )
+  })
+
+  it('형식이 잘못된 피드 응답을 거부한다', async () => {
+    stubFetch(jsonResponse([1, '2', 3]))
+
+    await expect(fetchStoryIds('new')).rejects.toThrow(
+      'new story id 목록 응답 형식이 올바르지 않습니다',
+    )
+  })
+
+  it('통신, 네트워크, 제이슨 파싱 실패를 리소스별 메시지로 감싼다', async () => {
+    stubFetch(jsonResponse({ message: 'nope' }, { status: 503, statusText: 'Unavailable' }))
+    await expect(fetchStoryIds('best')).rejects.toThrow(
+      'best story id 목록 조회에 실패했습니다: 503 Unavailable',
+    )
+
+    const networkFetch = vi.fn<typeof fetch>().mockRejectedValueOnce(new Error('offline'))
+    vi.stubGlobal('fetch', networkFetch)
+    await expect(fetchStoryIds('top')).rejects.toThrow(
+      'top story id 목록 조회에 실패했습니다: offline',
+    )
+
+    stubFetch(textResponse('{invalid json'))
+    await expect(fetchStoryIds('top')).rejects.toThrow(
+      'top story id 목록 응답 파싱에 실패했습니다',
+    )
+  })
+
+  it('중단 오류 실패는 감싸지 않는다', async () => {
+    const error = abortError()
+    const fetchMock = vi.fn<typeof fetch>().mockRejectedValueOnce(error)
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(fetchStoryIds('top')).rejects.toBe(error)
+  })
+})
+
+describe('해커 뉴스 아이템 조회', () => {
+  it('해커 뉴스 아이템을 반환하고 널 아이템 응답을 허용한다', async () => {
+    stubFetch(jsonResponse(storyItem), jsonResponse(null))
+
+    await expect(fetchItem(101)).resolves.toEqual(storyItem)
+    await expect(fetchItem(102)).resolves.toBeNull()
+  })
+
+  it('숫자 식별자가 없는 아이템 응답을 거부한다', async () => {
+    stubFetch(jsonResponse({ title: 'missing id' }), jsonResponse({ id: '123' }))
+
+    await expect(fetchItem(101)).rejects.toThrow('Hacker News item이 필요합니다')
+    await expect(fetchItem(123)).rejects.toThrow('숫자 id가 없습니다')
+  })
+})
+
+describe('단일 스토리 조회', () => {
+  it('표시 가능한 스토리만 반환한다', async () => {
+    stubFetch(
+      jsonResponse(storyItem),
+      jsonResponse({ ...storyItem, id: 102, type: 'comment' }),
+      jsonResponse({ ...storyItem, id: 103, deleted: true }),
+      jsonResponse(null),
+    )
+
+    await expect(fetchStory(101)).resolves.toEqual(storyItem)
+    await expect(fetchStory(102)).resolves.toBeNull()
+    await expect(fetchStory(103)).resolves.toBeNull()
+    await expect(fetchStory(104)).resolves.toBeNull()
+  })
+})
+
+describe('스토리 목록 조회', () => {
+  it('요청한 개수만 조회하고 아이템 실패와 표시 불가 아이템을 걸러낸다', async () => {
+    const fetchMock = stubFetch(
+      jsonResponse([101, 102, 103, 104]),
+      jsonResponse({ ...storyItem, id: 101, title: 'First' }),
+      jsonResponse({ message: 'bad gateway' }, { status: 502, statusText: 'Bad Gateway' }),
+      jsonResponse({ ...storyItem, id: 103, type: 'comment' }),
+    )
+
+    await expect(fetchStories('top', 3)).resolves.toEqual([
+      { ...storyItem, id: 101, title: 'First' },
+    ])
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      `${HACKER_NEWS_API_BASE_URL}/item/104.json`,
+      expect.anything(),
+    )
+  })
+
+  it('아이템 상세 조회 전에 안전하지 않은 제한값을 보정한다', async () => {
+    const nanFetchMock = stubFetch(
+      jsonResponse(Array.from({ length: INITIAL_STORY_LIMIT + 1 }, (_, index) => index + 1)),
+      ...Array.from({ length: INITIAL_STORY_LIMIT }, (_, index) =>
+        jsonResponse({ ...storyItem, id: index + 1 }),
+      ),
+    )
+
+    await fetchStories('new', Number.NaN)
+    expect(nanFetchMock).toHaveBeenCalledTimes(INITIAL_STORY_LIMIT + 1)
+
+    const negativeFetchMock = stubFetch(jsonResponse([1, 2, 3]))
+    await expect(fetchStories('new', -10)).resolves.toEqual([])
+    expect(negativeFetchMock).toHaveBeenCalledTimes(1)
+
+    const fractionalFetchMock = stubFetch(
+      jsonResponse([1, 2, 3]),
+      jsonResponse({ ...storyItem, id: 1 }),
+    )
+    await expect(fetchStories('new', 1.9)).resolves.toHaveLength(1)
+    expect(fractionalFetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('중단 오류 아이템 실패는 필터링하지 않고 전파한다', async () => {
+    const error = abortError()
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse([101]))
+      .mockRejectedValueOnce(error)
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(fetchStories('best', 1)).rejects.toBe(error)
+  })
+})
