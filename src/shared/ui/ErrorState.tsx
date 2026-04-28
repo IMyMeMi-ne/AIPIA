@@ -1,26 +1,32 @@
-type ErrorStateProps = {
+import type { HTMLAttributes, ReactNode } from 'react'
+import { className } from './className'
+
+type ErrorStateProps = HTMLAttributes<HTMLDivElement> & {
   title?: string
-  description?: string
-  retryLabel?: string
-  onRetry?: () => void
+  message?: ReactNode
+  action?: ReactNode
 }
 
-function ErrorState({
+export function ErrorState({
+  action,
+  className: extraClassName,
+  message,
   title = 'Something went wrong',
-  description,
-  retryLabel = 'Try again',
-  onRetry,
+  ...props
 }: ErrorStateProps) {
   return (
-    <section role="alert">
-      <h2>{title}</h2>
-      {description ? <p>{description}</p> : null}
-      {onRetry ? (
-        <button type="button" onClick={onRetry}>
-          {retryLabel}
-        </button>
-      ) : null}
-    </section>
+    <div
+      className={className(
+        'flex min-h-40 flex-col items-center justify-center gap-3 rounded-(--ds-radius-card) border border-(--ds-color-border) bg-(--ds-color-surface) p-6 text-center',
+        extraClassName,
+      )}
+      role="alert"
+      {...props}
+    >
+      <p className="m-0 text-base font-bold text-(--ds-color-danger)">{title}</p>
+      {message ? <p className="m-0 max-w-(--ds-layout-readable-max) text-sm text-app-muted">{message}</p> : null}
+      {action ? <div className="mt-1 flex flex-wrap justify-center gap-2">{action}</div> : null}
+    </div>
   )
 }
 

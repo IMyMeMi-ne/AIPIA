@@ -1,18 +1,27 @@
 import { Link, createBrowserRouter } from 'react-router-dom'
 import NewsListPage from '../pages/news-list/NewsListPage.tsx'
 import StoryDetailPage from '../pages/story-detail/StoryDetailPage.tsx'
+import { ErrorState } from '../shared/ui/ErrorState.tsx'
+import { PageShell } from '../shared/ui/PageShell.tsx'
+import { Surface } from '../shared/ui/Surface.tsx'
 
 const notFoundElement = (
-  <main className="flex min-h-screen bg-app-background text-app-foreground flex-col items-center justify-center gap-3 px-8 py-10 text-center" aria-labelledby="not-found-title">
-    <p className="m-0 text-base text-app-muted">AIPIA News</p>
-    <h1 id="not-found-title" className="m-0 text-5xl leading-none font-bold tracking-[-0.06em] text-app-foreground sm:text-7xl">
-      Page not found
-    </h1>
-    <p className="m-0 text-base text-app-muted">The requested route does not exist.</p>
-    <Link className="font-bold text-app-foreground underline-offset-4 hover:underline" to="/">
-      Back to stories
-    </Link>
-  </main>
+  <PageShell description="The requested route does not exist." title="Page not found">
+    <Surface className="p-4 sm:p-6" elevated>
+      <ErrorState
+        action={
+          <Link
+            className="inline-flex min-h-10 items-center rounded-(--ds-radius-control) bg-(--ds-color-accent) px-4 text-sm font-semibold text-(--ds-color-accent-foreground) transition-colors hover:bg-(--ds-color-accent-hover)"
+            to="/"
+          >
+            Back to stories
+          </Link>
+        }
+        message="Check the address or return to the main page."
+        title="Route unavailable"
+      />
+    </Surface>
+  </PageShell>
 )
 
 const router = createBrowserRouter([
