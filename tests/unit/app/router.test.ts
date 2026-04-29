@@ -1,6 +1,7 @@
+import { createElement, isValidElement, type ReactElement } from 'react'
+import { act, render, screen } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { isValidElement } from 'react'
-import type { RouteObject } from 'react-router-dom'
 import { appRoutes } from '@/app/router.tsx'
 
 type LazyPageRoute = RouteObject & {
@@ -17,6 +18,19 @@ function getLazyPageRoute(path: string) {
   expect(typeof route?.lazy).toBe('function')
 
   return route as LazyPageRoute
+}
+
+function createDeferredRoute() {
+  let resolve!: (value: { Component: () => ReactElement }) => void
+  const promise = new Promise<{ Component: () => ReactElement }>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+
+  return { promise, resolve }
+}
+
+function LazyTargetPage() {
+  return createElement('main', null, 'Lazy target page')
 }
 
 describe('앱 라우터', () => {
@@ -45,5 +59,38 @@ describe('앱 라우터', () => {
     await expect(getLazyPageRoute('*').lazy()).resolves.toEqual({
       Component: expect.any(Function),
     })
+  })
+
+  it('지연 route 로딩 중 fallback UI를 보여준 뒤 lazy component를 렌더링한다', async () => {
+    const deferredRoute = createDeferredRoute()
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/',
+          element: createElement('main', null, 'Home'),
+        },
+        {
+          path: '/lazy',
+          hydrateFallbackElement: createElement(
+            'p',
+            { role: 'status' },
+            'Loading page...',
+          ),
+          lazy: () => deferredRoute.promise,
+        },
+      ],
+      { initialEntries: ['/lazy'] },
+    )
+
+    render(createElement(RouterProvider, { router }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading page...')
+
+    await act(async () => {
+      deferredRoute.resolve({ Component: LazyTargetPage })
+      await deferredRoute.promise
+    })
+
+    expect(await screen.findByText('Lazy target page')).toBeInTheDocument()
   })
 })
