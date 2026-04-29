@@ -6,6 +6,7 @@ function LightThemeIcon() {
     <svg
       aria-hidden="true"
       className="size-4"
+      data-testid="light-theme-icon"
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
@@ -31,6 +32,7 @@ function DarkThemeIcon() {
     <svg
       aria-hidden="true"
       className="size-4"
+      data-testid="dark-theme-icon"
       fill="currentColor"
       viewBox="0 0 24 24"
     >
@@ -55,7 +57,7 @@ export function ThemeToggle() {
       title={label}
       type="button"
     >
-      {resolvedTheme === 'dark' ? <LightThemeIcon /> : <DarkThemeIcon />}
+      {resolvedTheme === 'dark' ? <DarkThemeIcon /> : <LightThemeIcon />}
     </button>
   )
 }
