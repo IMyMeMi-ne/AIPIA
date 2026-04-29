@@ -27,5 +27,5 @@ export function getFeedEndpoint(feedType: FeedType) {
 }
 
 export function buildStoryThumbnailUrl(storyId: HackerNewsStory['id']) {
-  return `${STORY_THUMBNAIL_BASE_URL}/${storyId}/${STORY_THUMBNAIL_WIDTH}/${STORY_THUMBNAIL_HEIGHT}`
+  return `${STORY_THUMBNAIL_BASE_URL}/${storyId}/${STORY_THUMBNAIL_WIDTH}/${STORY_THUMBNAIL_HEIGHT}.webp`
 }

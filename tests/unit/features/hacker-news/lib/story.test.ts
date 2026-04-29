@@ -39,6 +39,6 @@ describe('피드 엔드포인트 조회', () => {
 
 describe('스토리 썸네일 주소 생성', () => {
   it('스토리 식별자로 결정적인 시드 썸네일 주소를 만든다', () => {
-    expect(buildStoryThumbnailUrl(123)).toBe(`${STORY_THUMBNAIL_BASE_URL}/123/300/200`)
+    expect(buildStoryThumbnailUrl(123)).toBe(`${STORY_THUMBNAIL_BASE_URL}/123/300/200.webp`)
   })
 })
