@@ -32,6 +32,10 @@ function makeQueryClient() {
   });
 }
 
+function abortError() {
+  return Object.assign(new Error('aborted'), { name: 'AbortError' });
+}
+
 describe('해커 뉴스 쿼리 키', () => {
   it('안정적인 계층형 쿼리 키를 만든다', () => {
     expect(hackerNewsQueryKeys.all).toEqual(['hacker-news']);
@@ -161,6 +165,99 @@ describe('피드 스토리 인피니트 쿼리 옵션', () => {
 
     expect(fetchStory).toHaveBeenCalledTimes(1);
     expect(fetchStory).toHaveBeenCalledWith(2, { signal: undefined });
+  });
+
+  it('feed id 목록 조회 실패는 feed query error로 전파한다', async () => {
+    const queryClient = makeQueryClient();
+    const error = new Error('feed ids unavailable');
+    vi.mocked(fetchStoryIds).mockRejectedValueOnce(error);
+
+    await expect(
+      fetchFeedStoryPage({
+        client: queryClient,
+        feedType: 'top',
+        pageParam: { cursor: 0, storyIds: null },
+      }),
+    ).rejects.toBe(error);
+
+    expect(fetchStory).not.toHaveBeenCalled();
+  });
+
+  it('item 상세 조회 AbortError는 unavailable로 삼키지 않고 전파한다', async () => {
+    const queryClient = makeQueryClient();
+    const error = abortError();
+    const signal = new AbortController().signal;
+    vi.mocked(fetchStoryIds).mockResolvedValueOnce([1]);
+    vi.mocked(fetchStory).mockRejectedValueOnce(error);
+
+    await expect(
+      fetchFeedStoryPage({
+        client: queryClient,
+        feedType: 'top',
+        pageParam: { cursor: 0, storyIds: null },
+        signal,
+      }),
+    ).rejects.toBe(error);
+
+    expect(fetchStory).toHaveBeenCalledWith(1, { signal });
+  });
+
+  it('모든 item 상세 조회가 실패하고 표시 가능한 스토리가 없으면 page 조회를 거부한다', async () => {
+    const queryClient = makeQueryClient();
+    vi.mocked(fetchStoryIds).mockResolvedValueOnce([1, 2, 3]);
+    vi.mocked(fetchStory).mockRejectedValue(new Error('offline'));
+
+    await expect(
+      fetchFeedStoryPage({
+        client: queryClient,
+        feedType: 'best',
+        pageParam: { cursor: 0, storyIds: null },
+      }),
+    ).rejects.toThrow('Hacker News item 상세 조회 3건이 실패');
+
+    expect(fetchStory).toHaveBeenCalledTimes(3);
+  });
+
+  it('일부 item 상세 조회가 실패해도 표시 가능한 스토리가 있으면 page를 반환한다', async () => {
+    const queryClient = makeQueryClient();
+    vi.mocked(fetchStoryIds).mockResolvedValueOnce([1, 2, 3]);
+    vi.mocked(fetchStory).mockImplementation(async (id) => {
+      if (id === 2) {
+        throw new Error('offline');
+      }
+
+      return makeStory({ id });
+    });
+
+    await expect(
+      fetchFeedStoryPage({
+        client: queryClient,
+        feedType: 'new',
+        pageParam: { cursor: 0, storyIds: null },
+      }),
+    ).resolves.toEqual({
+      nextPageParam: null,
+      stories: [1, 3].map((id) => makeStory({ id })),
+    });
+  });
+
+  it('deleted/dead/non-story/null item은 error가 아니라 unavailable로 건너뛴다', async () => {
+    const queryClient = makeQueryClient();
+    vi.mocked(fetchStoryIds).mockResolvedValueOnce([1, 2, 3, 4]);
+    vi.mocked(fetchStory).mockResolvedValue(null);
+
+    await expect(
+      fetchFeedStoryPage({
+        client: queryClient,
+        feedType: 'top',
+        pageParam: { cursor: 0, storyIds: null },
+      }),
+    ).resolves.toEqual({
+      nextPageParam: null,
+      stories: [],
+    });
+
+    expect(fetchStory).toHaveBeenCalledTimes(4);
   });
 
   it('표시 가능한 스토리가 부족하면 scan limit까지만 훑고 다음 page param을 반환한다', async () => {

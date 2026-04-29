@@ -51,9 +51,10 @@ function isAbortError(error: unknown) {
   );
 }
 
-function isStory(story: HackerNewsStory | null): story is HackerNewsStory {
-  return story !== null;
-}
+type StoryFetchResult =
+  | { status: 'story'; story: HackerNewsStory }
+  | { status: 'unavailable' }
+  | { status: 'failed'; error: unknown };
 
 type FetchFeedStoryPageOptions = {
   client: QueryClient;
@@ -62,26 +63,30 @@ type FetchFeedStoryPageOptions = {
   signal?: AbortSignal;
 };
 
-// fresh detail cache가 있으면 재사용하고, 실패한 item은 null로 건너뛰어 목록 전체 실패를 막음
+// fresh detail cache가 있으면 재사용하고, unavailable item과 transport 실패를 구분
 async function fetchStoryFromCache(
   client: QueryClient,
   storyId: HackerNewsItem['id'],
   signal?: AbortSignal,
-) {
+): Promise<StoryFetchResult> {
   try {
-    return await client.fetchQuery({
+    const story = await client.fetchQuery({
       queryKey: hackerNewsQueryKeys.story(storyId),
       queryFn: () => fetchStory(storyId, { signal }),
       // feed page 내부 item 실패는 건너뛰는 정책이므로 숨은 재시도 요청을 만들지 않음
       // 상세 화면의 story query는 별도 query option에서 전역 retry 정책을 그대로 따름
       retry: false,
     });
+
+    return story === null
+      ? { status: 'unavailable' }
+      : { status: 'story', story };
   } catch (error) {
     if (isAbortError(error)) {
       throw error;
     }
 
-    return null;
+    return { status: 'failed', error };
   }
 }
 
@@ -125,6 +130,7 @@ export async function fetchFeedStoryPage({
     startCursor + STORY_PAGE_SCAN_LIMIT,
   );
   const stories: HackerNewsStory[] = [];
+  const failedItemErrors: unknown[] = [];
   let nextCursor = startCursor;
 
   while (nextCursor < scanEndCursor && stories.length < STORY_PAGE_SIZE) {
@@ -138,19 +144,21 @@ export async function fetchFeedStoryPage({
     const batchStoryIds = storyIds.slice(batchStartCursor, batchEndCursor);
 
     // 한 번에 너무 많은 item 요청을 만들지 않도록 concurrency 크기만큼 batch 조회
-    const batchStories = await Promise.all(
+    const batchStoryResults = await Promise.all(
       batchStoryIds.map((storyId) =>
         fetchStoryFromCache(client, storyId, signal),
       ),
     );
 
-    for (const [batchIndex, story] of batchStories.entries()) {
+    for (const [batchIndex, result] of batchStoryResults.entries()) {
       // batch 안에서 어디까지 소비했는지 cursor를 item 단위로 갱신
       // batch 크기는 남은 표시 슬롯 이하로 제한하지만, 방어적으로 page size 도달 시 중단
       nextCursor = batchStartCursor + batchIndex + 1;
 
-      if (isStory(story)) {
-        stories.push(story);
+      if (result.status === 'story') {
+        stories.push(result.story);
+      } else if (result.status === 'failed') {
+        failedItemErrors.push(result.error);
       }
 
       if (stories.length >= STORY_PAGE_SIZE) {
@@ -161,6 +169,13 @@ export async function fetchFeedStoryPage({
     if (stories.length < STORY_PAGE_SIZE) {
       nextCursor = batchEndCursor;
     }
+  }
+
+  if (stories.length === 0 && failedItemErrors.length > 0) {
+    throw new Error(
+      `Hacker News item 상세 조회 ${failedItemErrors.length}건이 실패해 표시할 스토리를 불러오지 못했습니다.`,
+      { cause: failedItemErrors[0] },
+    );
   }
 
   return {
