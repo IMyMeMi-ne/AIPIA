@@ -1,17 +1,17 @@
-import type { FeedType } from './types.ts'
+import type { FeedType } from './types.ts';
 
-export const HACKER_NEWS_API_BASE_URL = 'https://hacker-news.firebaseio.com/v0'
+export const HACKER_NEWS_API_BASE_URL = 'https://hacker-news.firebaseio.com/v0';
 
 export const FEED_ENDPOINTS = {
   top: '/topstories.json',
   new: '/newstories.json',
   best: '/beststories.json',
-} as const satisfies Record<FeedType, string>
+} as const satisfies Record<FeedType, string>;
 
-export const STORY_PAGE_SIZE = 9
-export const STORY_PAGE_SCAN_LIMIT = 30
-export const STORY_ITEM_FETCH_CONCURRENCY = 3
+export const STORY_PAGE_SIZE = 9;
+export const STORY_PAGE_SCAN_LIMIT = 30;
+export const STORY_ITEM_FETCH_CONCURRENCY = 9;
 
-export const STORY_THUMBNAIL_WIDTH = 300
-export const STORY_THUMBNAIL_HEIGHT = 200
-export const STORY_THUMBNAIL_BASE_URL = 'https://picsum.photos/seed'
+export const STORY_THUMBNAIL_WIDTH = 300;
+export const STORY_THUMBNAIL_HEIGHT = 200;
+export const STORY_THUMBNAIL_BASE_URL = 'https://picsum.photos/seed';
