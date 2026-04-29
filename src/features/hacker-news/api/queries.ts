@@ -129,7 +129,9 @@ export async function fetchFeedStoryPage({
 
   while (nextCursor < scanEndCursor && stories.length < STORY_PAGE_SIZE) {
     const batchStartCursor = nextCursor;
+    const remainingStorySlots = STORY_PAGE_SIZE - stories.length;
     const batchEndCursor = Math.min(
+      batchStartCursor + remainingStorySlots,
       batchStartCursor + STORY_ITEM_FETCH_CONCURRENCY,
       scanEndCursor,
     );
