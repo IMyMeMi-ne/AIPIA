@@ -12,6 +12,10 @@ function parseExternalUrl(url?: string) {
       return null
     }
 
+    if (parsedUrl.username !== '' || parsedUrl.password !== '') {
+      return null
+    }
+
     return parsedUrl
   } catch {
     return null
@@ -20,6 +24,10 @@ function parseExternalUrl(url?: string) {
 
 export function isValidExternalUrl(url?: string) {
   return parseExternalUrl(url) !== null
+}
+
+export function getExternalUrl(url?: string) {
+  return parseExternalUrl(url)?.href
 }
 
 export function getDisplayUrl(url?: string) {

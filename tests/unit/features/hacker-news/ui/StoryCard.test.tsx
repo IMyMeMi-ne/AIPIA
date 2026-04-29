@@ -56,4 +56,18 @@ describe('스토리 카드', () => {
     fireEvent.error(image);
     expect(image).toHaveStyle({ display: 'none' });
   });
+
+  it('유효하지 않은 timestamp가 있어도 대표 카드 메타데이터 렌더링을 깨뜨리지 않는다', () => {
+    renderWithRouter(
+      <StoryCard
+        story={makeStory({ id: 505, time: Number.MAX_VALUE })}
+        variant="featured"
+      />,
+    );
+
+    const time = screen.getByText(UNKNOWN_DATE_LABEL);
+
+    expect(time.tagName).toBe('TIME');
+    expect(time).not.toHaveAttribute('datetime');
+  });
 });

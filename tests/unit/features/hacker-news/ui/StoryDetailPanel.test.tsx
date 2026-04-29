@@ -25,7 +25,7 @@ describe('스토리 상세 패널', () => {
     expect(screen.getByText('dave')).toBeInTheDocument();
     expect(screen.getByText('1 point')).toBeInTheDocument();
     expect(screen.getByText('2024-01-01')).toBeInTheDocument();
-    expect(screen.getByText('example.com')).toBeInTheDocument();
+    expect(screen.getByText('https://www.example.com/article')).toBeInTheDocument();
 
     const sourceLink = screen.getByRole('link', {
       name: 'Open original story',

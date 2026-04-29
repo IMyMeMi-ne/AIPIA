@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
-import { formatUnixSecondsDate } from '@/shared/lib/date.ts';
+import {
+  formatUnixSecondsDate,
+  formatUnixSecondsDateTime,
+} from '@/shared/lib/date.ts';
 import { Surface } from '@/shared/ui/Surface.tsx';
 import { buildStoryThumbnailUrl } from '../lib/story.ts';
 import type { HackerNewsStory } from '../model/types.ts';
@@ -13,10 +16,7 @@ type StoryCardProps = {
 
 function StoryMeta({ story }: { story: HackerNewsStory }) {
   const dateLabel = formatUnixSecondsDate(story.time);
-  const dateTime =
-    typeof story.time === 'number'
-      ? new Date(story.time * 1000).toISOString()
-      : undefined;
+  const dateTime = formatUnixSecondsDateTime(story.time);
 
   return (
     <p className="m-0 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm text-app-muted">

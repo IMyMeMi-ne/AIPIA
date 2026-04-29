@@ -11,11 +11,13 @@ import { Surface } from '@/shared/ui/Surface.tsx';
 import { ThemeToggle } from '@/shared/ui/ThemeToggle.tsx';
 
 function parseStoryId(storyId: string | undefined) {
-  if (storyId === undefined || storyId.trim().length === 0) {
+  const trimmedStoryId = storyId?.trim();
+
+  if (trimmedStoryId === undefined || !/^\d+$/.test(trimmedStoryId)) {
     return null;
   }
 
-  const parsedStoryId = Number(storyId);
+  const parsedStoryId = Number(trimmedStoryId);
 
   if (!Number.isSafeInteger(parsedStoryId) || parsedStoryId <= 0) {
     return null;

@@ -1,5 +1,5 @@
 import { formatUnixSecondsDate } from '@/shared/lib/date.ts'
-import { getDisplayUrl, isValidExternalUrl, NO_SOURCE_URL_LABEL } from '@/shared/lib/url.ts'
+import { getExternalUrl, NO_SOURCE_URL_LABEL } from '@/shared/lib/url.ts'
 import { Surface } from '@/shared/ui/Surface.tsx'
 import type { HackerNewsStory } from '../model/types.ts'
 
@@ -31,9 +31,9 @@ function getAuthorLabel(author: HackerNewsStory['by']) {
 }
 
 function StoryDetailPanel({ story }: StoryDetailPanelProps) {
-  const hasSourceUrl = isValidExternalUrl(story.url)
-  const sourceUrl = hasSourceUrl ? story.url?.trim() : undefined
-  const displayUrl = getDisplayUrl(story.url)
+  const sourceUrl = getExternalUrl(story.url)
+  const hasSourceUrl = sourceUrl !== undefined
+  const displayUrl = sourceUrl ?? NO_SOURCE_URL_LABEL
 
   return (
     <Surface className="overflow-hidden" elevated>

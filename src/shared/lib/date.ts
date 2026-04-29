@@ -23,3 +23,17 @@ export function formatUnixSecondsDate(time?: number) {
 
   return formatDateToYyyyMmDd(new Date(time * 1000))
 }
+
+export function formatUnixSecondsDateTime(time?: number) {
+  if (typeof time !== 'number' || !Number.isFinite(time)) {
+    return undefined
+  }
+
+  const date = new Date(time * 1000)
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined
+  }
+
+  return date.toISOString()
+}
