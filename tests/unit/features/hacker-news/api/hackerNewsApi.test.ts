@@ -1,11 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   fetchItem,
-  fetchStories,
   fetchStory,
   fetchStoryIds,
 } from '@/features/hacker-news/api/hackerNewsApi.ts'
-import { HACKER_NEWS_API_BASE_URL, INITIAL_STORY_LIMIT } from '@/features/hacker-news/model/constants.ts'
+import { HACKER_NEWS_API_BASE_URL } from '@/features/hacker-news/model/constants.ts'
 import type { HackerNewsItem } from '@/features/hacker-news/model/types.ts'
 
 function jsonResponse(body: unknown, init: ResponseInit = {}) {
@@ -121,59 +120,5 @@ describe('단일 스토리 조회', () => {
     await expect(fetchStory(102)).resolves.toBeNull()
     await expect(fetchStory(103)).resolves.toBeNull()
     await expect(fetchStory(104)).resolves.toBeNull()
-  })
-})
-
-describe('스토리 목록 조회', () => {
-  it('요청한 개수만 조회하고 아이템 실패와 표시 불가 아이템을 걸러낸다', async () => {
-    const fetchMock = stubFetch(
-      jsonResponse([101, 102, 103, 104]),
-      jsonResponse({ ...storyItem, id: 101, title: 'First' }),
-      jsonResponse({ message: 'bad gateway' }, { status: 502, statusText: 'Bad Gateway' }),
-      jsonResponse({ ...storyItem, id: 103, type: 'comment' }),
-    )
-
-    await expect(fetchStories('top', 3)).resolves.toEqual([
-      { ...storyItem, id: 101, title: 'First' },
-    ])
-    expect(fetchMock).toHaveBeenCalledTimes(4)
-    expect(fetchMock).not.toHaveBeenCalledWith(
-      `${HACKER_NEWS_API_BASE_URL}/item/104.json`,
-      expect.anything(),
-    )
-  })
-
-  it('아이템 상세 조회 전에 안전하지 않은 제한값을 보정한다', async () => {
-    const nanFetchMock = stubFetch(
-      jsonResponse(Array.from({ length: INITIAL_STORY_LIMIT + 1 }, (_, index) => index + 1)),
-      ...Array.from({ length: INITIAL_STORY_LIMIT }, (_, index) =>
-        jsonResponse({ ...storyItem, id: index + 1 }),
-      ),
-    )
-
-    await fetchStories('new', Number.NaN)
-    expect(nanFetchMock).toHaveBeenCalledTimes(INITIAL_STORY_LIMIT + 1)
-
-    const negativeFetchMock = stubFetch(jsonResponse([1, 2, 3]))
-    await expect(fetchStories('new', -10)).resolves.toEqual([])
-    expect(negativeFetchMock).toHaveBeenCalledTimes(1)
-
-    const fractionalFetchMock = stubFetch(
-      jsonResponse([1, 2, 3]),
-      jsonResponse({ ...storyItem, id: 1 }),
-    )
-    await expect(fetchStories('new', 1.9)).resolves.toHaveLength(1)
-    expect(fractionalFetchMock).toHaveBeenCalledTimes(2)
-  })
-
-  it('중단 오류 아이템 실패는 필터링하지 않고 전파한다', async () => {
-    const error = abortError()
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(jsonResponse([101]))
-      .mockRejectedValueOnce(error)
-    vi.stubGlobal('fetch', fetchMock)
-
-    await expect(fetchStories('best', 1)).rejects.toBe(error)
   })
 })

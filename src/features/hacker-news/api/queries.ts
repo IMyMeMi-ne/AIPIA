@@ -1,35 +1,196 @@
-import { queryOptions } from '@tanstack/react-query'
-import { INITIAL_STORY_LIMIT } from '../model/constants.ts'
-import type { FeedType, HackerNewsItem } from '../model/types.ts'
-import { fetchStories, fetchStory } from './hackerNewsApi.ts'
+import {
+  infiniteQueryOptions,
+  queryOptions,
+  type QueryClient,
+} from '@tanstack/react-query';
+import {
+  STORY_ITEM_FETCH_CONCURRENCY,
+  STORY_PAGE_SCAN_LIMIT,
+  STORY_PAGE_SIZE,
+} from '../model/constants.ts';
+import type {
+  FeedType,
+  HackerNewsItem,
+  HackerNewsStory,
+} from '../model/types.ts';
+import { fetchStoryIds, fetchStory } from './hackerNewsApi.ts';
 
+// infinite query의 pageParam: cursor는 고정된 feed id snapshot 안의 index
+// storyIds가 null이면 첫 page라서 feed id 목록을 새로 조회하고, 이후 page는 같은 snapshot을 재사용
+export type FeedStoriesPageParam = {
+  cursor: number;
+  storyIds: readonly HackerNewsItem['id'][] | null;
+};
+
+// 한 page는 화면에 추가할 story 목록과 다음 page를 가져오기 위한 pageParam을 함께 반환
+export type FeedStoriesPage = {
+  stories: HackerNewsStory[];
+  nextPageParam: FeedStoriesPageParam | null;
+};
+
+// Hacker News 서버 상태 key factory. feed 목록, feed id snapshot, story detail cache를 분리
 export const hackerNewsQueryKeys = {
   all: ['hacker-news'] as const,
   feeds: () => [...hackerNewsQueryKeys.all, 'feed'] as const,
-  feed: (feedType: FeedType) => [...hackerNewsQueryKeys.feeds(), feedType] as const,
+  feed: (feedType: FeedType) =>
+    [...hackerNewsQueryKeys.feeds(), feedType] as const,
+  feedIds: (feedType: FeedType) =>
+    [...hackerNewsQueryKeys.all, 'feed-ids', feedType] as const,
   stories: () => [...hackerNewsQueryKeys.all, 'story'] as const,
   story: (storyId: HackerNewsItem['id']) =>
     [...hackerNewsQueryKeys.stories(), storyId] as const,
+};
+
+// AbortError는 TanStack Query 취소 신호이므로 item 실패로 삼키지 않고 상위 query에 전파
+function isAbortError(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'name' in error &&
+    error.name === 'AbortError'
+  );
 }
 
-export function feedStoriesQueryOptions(feedType: FeedType) {
-  return queryOptions({
+function isStory(story: HackerNewsStory | null): story is HackerNewsStory {
+  return story !== null;
+}
+
+type FetchFeedStoryPageOptions = {
+  client: QueryClient;
+  feedType: FeedType;
+  pageParam: FeedStoriesPageParam;
+  signal?: AbortSignal;
+};
+
+// fresh detail cache가 있으면 재사용하고, 실패한 item은 null로 건너뛰어 목록 전체 실패를 막음
+async function fetchStoryFromCache(
+  client: QueryClient,
+  storyId: HackerNewsItem['id'],
+  signal?: AbortSignal,
+) {
+  try {
+    return await client.fetchQuery({
+      queryKey: hackerNewsQueryKeys.story(storyId),
+      queryFn: () => fetchStory(storyId, { signal }),
+      // feed page 내부 item 실패는 건너뛰는 정책이므로 숨은 재시도 요청을 만들지 않음
+      // 상세 화면의 story query는 별도 query option에서 전역 retry 정책을 그대로 따름
+      retry: false,
+    });
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
+
+    return null;
+  }
+}
+
+// 첫 page에서는 feed id 목록을 조회한 뒤 복사본을 snapshot으로 고정
+// 이후 page는 pageParam.storyIds를 그대로 사용해 feed가 stale/refetch되어도 cursor 의미가 바뀌지 않음
+async function getFeedStoryIdsSnapshot(
+  client: QueryClient,
+  feedType: FeedType,
+  pageParam: FeedStoriesPageParam,
+  signal?: AbortSignal,
+) {
+  if (pageParam.storyIds !== null) {
+    return pageParam.storyIds;
+  }
+
+  const fetchedStoryIds = await client.fetchQuery({
+    queryKey: hackerNewsQueryKeys.feedIds(feedType),
+    queryFn: () => fetchStoryIds(feedType, { signal }),
+  });
+
+  return [...fetchedStoryIds];
+}
+
+// cursor부터 scan limit 안에서 display 가능한 story를 page size만큼 모음
+// deleted/dead/non-story item이 섞일 수 있어 "id N개"가 아니라 "displayable story N개"를 목표
+export async function fetchFeedStoryPage({
+  client,
+  feedType,
+  pageParam,
+  signal,
+}: FetchFeedStoryPageOptions): Promise<FeedStoriesPage> {
+  const storyIds = await getFeedStoryIdsSnapshot(
+    client,
+    feedType,
+    pageParam,
+    signal,
+  );
+  const startCursor = Math.max(0, Math.floor(pageParam.cursor));
+  const scanEndCursor = Math.min(
+    storyIds.length,
+    startCursor + STORY_PAGE_SCAN_LIMIT,
+  );
+  const stories: HackerNewsStory[] = [];
+  let nextCursor = startCursor;
+
+  while (nextCursor < scanEndCursor && stories.length < STORY_PAGE_SIZE) {
+    const batchStartCursor = nextCursor;
+    const batchEndCursor = Math.min(
+      batchStartCursor + STORY_ITEM_FETCH_CONCURRENCY,
+      scanEndCursor,
+    );
+    const batchStoryIds = storyIds.slice(batchStartCursor, batchEndCursor);
+
+    // 한 번에 너무 많은 item 요청을 만들지 않도록 concurrency 크기만큼 batch 조회
+    const batchStories = await Promise.all(
+      batchStoryIds.map((storyId) =>
+        fetchStoryFromCache(client, storyId, signal),
+      ),
+    );
+
+    for (const [batchIndex, story] of batchStories.entries()) {
+      // batch 안에서 어디까지 소비했는지 cursor를 item 단위로 갱신
+      // page size를 채우면 같은 batch의 남은 결과가 있더라도 다음 page는 그 다음 index부터 시작
+      nextCursor = batchStartCursor + batchIndex + 1;
+
+      if (isStory(story)) {
+        stories.push(story);
+      }
+
+      if (stories.length >= STORY_PAGE_SIZE) {
+        break;
+      }
+    }
+
+    if (stories.length < STORY_PAGE_SIZE) {
+      nextCursor = batchEndCursor;
+    }
+  }
+
+  return {
+    stories,
+    nextPageParam:
+      nextCursor < storyIds.length ? { cursor: nextCursor, storyIds } : null,
+  };
+}
+
+const initialFeedStoriesPageParam: FeedStoriesPageParam = {
+  cursor: 0,
+  storyIds: null,
+};
+
+export function feedStoriesInfiniteQueryOptions(feedType: FeedType) {
+  return infiniteQueryOptions({
     queryKey: hackerNewsQueryKeys.feed(feedType),
-    queryFn: async ({ signal, client }) => {
-      const stories = await fetchStories(feedType, INITIAL_STORY_LIMIT, { signal })
-
-      stories.forEach((story) => {
-        client.setQueryData(hackerNewsQueryKeys.story(story.id), story)
-      })
-
-      return stories
-    },
-  })
+    initialPageParam: initialFeedStoriesPageParam,
+    queryFn: ({ signal, client, pageParam }) =>
+      fetchFeedStoryPage({
+        client,
+        feedType,
+        pageParam,
+        signal,
+      }),
+    getNextPageParam: (lastPage) => lastPage.nextPageParam,
+  });
 }
 
 export function storyDetailQueryOptions(storyId: HackerNewsItem['id']) {
   return queryOptions({
     queryKey: hackerNewsQueryKeys.story(storyId),
     queryFn: ({ signal }) => fetchStory(storyId, { signal }),
-  })
+  });
 }

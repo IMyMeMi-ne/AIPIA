@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { feedStoriesQueryOptions } from '@/features/hacker-news/api/queries.ts';
+import { useEffect, useRef, useState } from 'react';
+import { useGetHackerNewsList } from '@/features/hacker-news/model/useGetHackerNewsList.ts';
 import FeedTabs from '@/features/hacker-news/ui/FeedTabs.tsx';
 import StoryGrid from '@/features/hacker-news/ui/StoryGrid.tsx';
 import StoryGridSkeleton from '@/features/hacker-news/ui/StoryGridSkeleton.tsx';
@@ -25,7 +24,48 @@ function getErrorMessage(error: unknown) {
 
 function NewsListPage() {
   const [selectedFeed, setSelectedFeed] = useState<FeedType>('top');
-  const feedStoriesQuery = useQuery(feedStoriesQueryOptions(selectedFeed));
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const {
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isError,
+    isFetchingNextPage,
+    isLoading,
+    isSuccess,
+    refetch,
+    stories,
+  } = useGetHackerNewsList(selectedFeed);
+
+  useEffect(() => {
+    const loadMoreTarget = loadMoreRef.current;
+
+    if (
+      loadMoreTarget === null ||
+      !hasNextPage ||
+      typeof IntersectionObserver === 'undefined'
+    ) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !isFetchingNextPage) {
+          void fetchNextPage();
+        }
+      },
+      { rootMargin: '120px 0px' },
+    );
+
+    observer.observe(loadMoreTarget);
+
+    return () => observer.disconnect();
+  }, [
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    selectedFeed,
+  ]);
 
   return (
     <PageShell
@@ -48,25 +88,37 @@ function NewsListPage() {
         </div>
 
         <div className="p-0 lg:p-6">
-          {feedStoriesQuery.isLoading ? <StoryGridSkeleton /> : null}
+          {isLoading ? <StoryGridSkeleton /> : null}
 
-          {feedStoriesQuery.isError ? (
+          {isError ? (
             <ErrorState
               action={
                 <Button
-                  onClick={() => void feedStoriesQuery.refetch()}
+                  onClick={() => void refetch()}
                   variant="secondary"
                 >
                   Try again
                 </Button>
               }
-              message={getErrorMessage(feedStoriesQuery.error)}
+              message={getErrorMessage(error)}
               title="Could not load stories"
             />
           ) : null}
 
-          {feedStoriesQuery.isSuccess ? (
-            <StoryGrid stories={feedStoriesQuery.data} />
+          {isSuccess ? <StoryGrid stories={stories} /> : null}
+
+          {isSuccess && hasNextPage ? (
+            <div ref={loadMoreRef} className="mt-6 flex justify-center">
+              <Button
+                disabled={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+                variant="secondary"
+              >
+                {isFetchingNextPage
+                  ? 'Loading more stories...'
+                  : 'Load more stories'}
+              </Button>
+            </div>
           ) : null}
         </div>
       </Surface>

@@ -1,7 +1,4 @@
-import {
-  HACKER_NEWS_API_BASE_URL,
-  INITIAL_STORY_LIMIT,
-} from '../model/constants.ts';
+import { HACKER_NEWS_API_BASE_URL } from '../model/constants.ts';
 import type {
   FeedType,
   HackerNewsItem,
@@ -89,15 +86,6 @@ function isStoryIdList(value: unknown): value is number[] {
   return Array.isArray(value) && value.every((id) => Number.isInteger(id));
 }
 
-// item 상세 요청이 과도하게 늘지 않도록 limit을 안전한 정수 범위로 정규화
-function normalizeLimit(limit: number) {
-  if (!Number.isFinite(limit)) {
-    return INITIAL_STORY_LIMIT;
-  }
-
-  return Math.max(0, Math.floor(limit));
-}
-
 // raw JSON을 HN item 경계 타입으로 좁히고, null item은 그대로 허용
 function toHackerNewsItem(
   value: unknown,
@@ -160,29 +148,4 @@ export async function fetchStory(
   const item = await fetchItem(id, options);
 
   return isDisplayableStory(item) ? item : null;
-}
-
-export async function fetchStories(
-  feedType: FeedType,
-  limit = INITIAL_STORY_LIMIT,
-  options: HackerNewsApiRequestOptions = {},
-): Promise<HackerNewsStory[]> {
-  const storyIds = await fetchStoryIds(feedType, options);
-  const limitedStoryIds = storyIds.slice(0, normalizeLimit(limit));
-
-  const stories = await Promise.all(
-    limitedStoryIds.map(async (storyId) => {
-      try {
-        return await fetchStory(storyId, options);
-      } catch (error) {
-        if (isAbortError(error)) {
-          throw error;
-        }
-
-        return null;
-      }
-    }),
-  );
-
-  return stories.filter(isDisplayableStory);
 }

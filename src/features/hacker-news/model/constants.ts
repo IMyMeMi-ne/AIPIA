@@ -8,7 +8,9 @@ export const FEED_ENDPOINTS = {
   best: '/beststories.json',
 } as const satisfies Record<FeedType, string>
 
-export const INITIAL_STORY_LIMIT = 20
+export const STORY_PAGE_SIZE = 9
+export const STORY_PAGE_SCAN_LIMIT = 30
+export const STORY_ITEM_FETCH_CONCURRENCY = 3
 
 export const STORY_THUMBNAIL_WIDTH = 300
 export const STORY_THUMBNAIL_HEIGHT = 200
