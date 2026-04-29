@@ -35,7 +35,7 @@ export function RouteChunkErrorState() {
           Refresh the page or return to the story feed.
         </p>
         <a
-          className="rounded-(--ds-radius-control) border border-(--ds-color-border) px-3 py-2 text-sm font-semibold text-app-foreground transition-colors hover:bg-(--ds-color-muted-surface)"
+          className="rounded-(--ds-radius-control) border border-(--ds-color-border) px-3 py-2 text-sm font-semibold text-app-foreground transition-colors"
           href="/"
         >
           Back to feed

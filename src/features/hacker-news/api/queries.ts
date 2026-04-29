@@ -146,7 +146,7 @@ export async function fetchFeedStoryPage({
 
     for (const [batchIndex, story] of batchStories.entries()) {
       // batch 안에서 어디까지 소비했는지 cursor를 item 단위로 갱신
-      // page size를 채우면 같은 batch의 남은 결과가 있더라도 다음 page는 그 다음 index부터 시작
+      // batch 크기는 남은 표시 슬롯 이하로 제한하지만, 방어적으로 page size 도달 시 중단
       nextCursor = batchStartCursor + batchIndex + 1;
 
       if (isStory(story)) {
