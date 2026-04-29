@@ -72,6 +72,30 @@ describe('useGetHackerNewsList', () => {
     expect(fetchNextPage).toHaveBeenCalledWith({ cancelRefetch: false });
   });
 
+  it('query result object가 바뀌어도 필요한 의존성이 같으면 fetchNextPage callback을 유지한다', () => {
+    const fetchNextPage = vi.fn();
+    vi.mocked(useInfiniteQuery)
+      .mockReturnValueOnce(
+        infiniteQuerySuccess([storyPage([1])], {
+          fetchNextPage,
+          hasNextPage: true,
+        }),
+      )
+      .mockReturnValueOnce(
+        infiniteQuerySuccess([storyPage([1])], {
+          fetchNextPage,
+          hasNextPage: true,
+        }),
+      );
+
+    const { rerender, result } = renderHook(() => useGetHackerNewsList('new'));
+    const firstFetchNextPage = result.current.fetchNextPage;
+
+    rerender();
+
+    expect(result.current.fetchNextPage).toBe(firstFetchNextPage);
+  });
+
   it('다음 페이지가 없거나 이미 fetching 상태면 추가 조회하지 않는다', async () => {
     const fetchNextPage = vi.fn();
     vi.mocked(useInfiniteQuery).mockReturnValue(

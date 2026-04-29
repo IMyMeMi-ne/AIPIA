@@ -5,6 +5,11 @@ import type { FeedType } from './types.ts';
 
 export function useGetHackerNewsList(feedType: FeedType) {
   const query = useInfiniteQuery(feedStoriesInfiniteQueryOptions(feedType));
+  const {
+    fetchNextPage: queryFetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = query;
   const fetchNextPageInFlightRef = useRef(false);
   const stories = useMemo(
     () => query.data?.pages.flatMap((page) => page.stories) ?? [],
@@ -13,8 +18,8 @@ export function useGetHackerNewsList(feedType: FeedType) {
   const fetchNextPage = useCallback(async () => {
     if (
       fetchNextPageInFlightRef.current ||
-      query.isFetchingNextPage ||
-      !query.hasNextPage
+      isFetchingNextPage ||
+      !hasNextPage
     ) {
       return;
     }
@@ -22,11 +27,11 @@ export function useGetHackerNewsList(feedType: FeedType) {
     fetchNextPageInFlightRef.current = true;
 
     try {
-      await query.fetchNextPage({ cancelRefetch: false });
+      await queryFetchNextPage({ cancelRefetch: false });
     } finally {
       fetchNextPageInFlightRef.current = false;
     }
-  }, [query]);
+  }, [hasNextPage, isFetchingNextPage, queryFetchNextPage]);
 
   return {
     ...query,
