@@ -4,6 +4,10 @@ import {
   formatUnixSecondsDateTime,
 } from '@/shared/lib/date.ts';
 import { buildStoryThumbnailUrl } from '../lib/story.ts';
+import {
+  STORY_THUMBNAIL_HEIGHT,
+  STORY_THUMBNAIL_WIDTH,
+} from '../model/constants.ts';
 import type { HackerNewsStory } from '../model/types.ts';
 
 type StoryCardProps = {
@@ -46,12 +50,15 @@ function StoryCard({ priority = false, story }: StoryCardProps) {
           <img
             alt=""
             className="relative h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] group-focus-within:scale-[1.04] lg:duration-200 lg:group-hover:scale-[1.02] lg:group-focus-within:scale-[1.02]"
+            decoding="async"
             fetchPriority={priority ? 'high' : 'auto'}
+            height={STORY_THUMBNAIL_HEIGHT}
             loading={priority ? 'eager' : 'lazy'}
             onError={(event) => {
               event.currentTarget.style.display = 'none';
             }}
             src={buildStoryThumbnailUrl(story.id)}
+            width={STORY_THUMBNAIL_WIDTH}
           />
         </div>
         <article className="flex h-full min-w-0 flex-col border-l-2 border-transparent pl-3 transition-colors group-hover:border-(--ds-color-accent) group-focus-within:border-(--ds-color-accent) lg:flex-1 lg:gap-4 lg:border-l-0 lg:p-5">

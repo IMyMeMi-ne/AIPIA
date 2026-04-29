@@ -2,6 +2,10 @@ import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import StoryCard from '@/features/hacker-news/ui/StoryCard.tsx';
 import { buildStoryThumbnailUrl } from '@/features/hacker-news/lib/story.ts';
+import {
+  STORY_THUMBNAIL_HEIGHT,
+  STORY_THUMBNAIL_WIDTH,
+} from '@/features/hacker-news/model/constants.ts';
 import { UNKNOWN_DATE_LABEL } from '@/shared/lib/date.ts';
 import { renderWithRouter } from '../../../../utils/react.tsx';
 import { makeStory } from '../../../../utils/stories.ts';
@@ -28,8 +32,17 @@ describe('스토리 카드', () => {
       <StoryCard priority story={story} />,
     );
     const priorityImage = priorityView.container.querySelector('img');
+    expect(priorityImage).toHaveAttribute(
+      'height',
+      String(STORY_THUMBNAIL_HEIGHT),
+    );
     expect(priorityImage).toHaveAttribute('loading', 'eager');
+    expect(priorityImage).toHaveAttribute('decoding', 'async');
     expect(priorityImage).toHaveAttribute('fetchpriority', 'high');
+    expect(priorityImage).toHaveAttribute(
+      'width',
+      String(STORY_THUMBNAIL_WIDTH),
+    );
 
     priorityView.unmount();
     const normalView = renderWithRouter(<StoryCard story={story} />);
