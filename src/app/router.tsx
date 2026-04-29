@@ -1,7 +1,22 @@
 import { createBrowserRouter, type RouteObject } from 'react-router-dom'
 import NewsListPage from '../pages/news-list/NewsListPage.tsx'
-import NotFoundPage from '../pages/not-found/NotFoundPage.tsx'
-import StoryDetailPage from '../pages/story-detail/StoryDetailPage.tsx'
+import { RouteChunkErrorState, RouteChunkFallback } from './RouteChunkStates.tsx'
+
+async function loadStoryDetailRoute() {
+  const { default: StoryDetailPage } = await import(
+    '../pages/story-detail/StoryDetailPage.tsx'
+  )
+
+  return { Component: StoryDetailPage }
+}
+
+async function loadNotFoundRoute() {
+  const { default: NotFoundPage } = await import(
+    '../pages/not-found/NotFoundPage.tsx'
+  )
+
+  return { Component: NotFoundPage }
+}
 
 export const appRoutes = [
   {
@@ -10,11 +25,15 @@ export const appRoutes = [
   },
   {
     path: '/stories/:storyId',
-    element: <StoryDetailPage />,
+    errorElement: <RouteChunkErrorState />,
+    hydrateFallbackElement: <RouteChunkFallback />,
+    lazy: loadStoryDetailRoute,
   },
   {
     path: '*',
-    element: <NotFoundPage />,
+    errorElement: <RouteChunkErrorState />,
+    hydrateFallbackElement: <RouteChunkFallback />,
+    lazy: loadNotFoundRoute,
   },
 ] satisfies RouteObject[]
 
