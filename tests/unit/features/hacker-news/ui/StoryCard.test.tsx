@@ -7,35 +7,35 @@ import { renderWithRouter } from '../../../../utils/react.tsx';
 import { makeStory } from '../../../../utils/stories.ts';
 
 describe('스토리 카드', () => {
-  it('기본 데스크톱 변형에서 작성자, 날짜, 상세 링크를 렌더링한다', () => {
-    const story = makeStory({ id: 123, title: 'Desktop story', by: 'carol' });
+  it('동일한 리스트형 링크에서 제목, 작성자, 날짜, 상세 링크를 렌더링한다', () => {
+    const story = makeStory({ id: 123, title: 'List story', by: 'carol' });
 
     renderWithRouter(<StoryCard story={story} />);
 
     expect(
-      screen.getByRole('link', { name: 'Read story: Desktop story' }),
+      screen.getByRole('link', { name: 'Read story: List story' }),
     ).toHaveAttribute('href', '/stories/123');
-    expect(screen.getByText('Desktop story')).toBeInTheDocument();
+    expect(screen.getByText('List story')).toBeInTheDocument();
     expect(screen.getByText('carol')).toBeInTheDocument();
     expect(screen.getByText('2024-01-01')).toBeInTheDocument();
+    expect(screen.queryByText('Lead story')).not.toBeInTheDocument();
   });
 
-  it('컴팩트와 대표 변형을 기대한 라벨과 함께 렌더링한다', () => {
-    const story = makeStory({ id: 55, title: 'Variant story' });
+  it('우선순위 카드만 eager/high 이미지 로딩 힌트를 사용한다', () => {
+    const story = makeStory({ id: 55, title: 'Priority story' });
 
-    const featuredView = renderWithRouter(
-      <StoryCard story={story} variant="featured" />,
+    const priorityView = renderWithRouter(
+      <StoryCard priority story={story} />,
     );
-    expect(screen.getByText('Lead story')).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: 'Read story: Variant story' }),
-    ).toHaveAttribute('href', '/stories/55');
+    const priorityImage = priorityView.container.querySelector('img');
+    expect(priorityImage).toHaveAttribute('loading', 'eager');
+    expect(priorityImage).toHaveAttribute('fetchpriority', 'high');
 
-    featuredView.unmount();
-    renderWithRouter(<StoryCard story={story} variant="compact" />);
-    expect(
-      screen.getByRole('link', { name: 'Read story: Variant story' }),
-    ).toHaveAttribute('href', '/stories/55');
+    priorityView.unmount();
+    const normalView = renderWithRouter(<StoryCard story={story} />);
+    const normalImage = normalView.container.querySelector('img');
+    expect(normalImage).toHaveAttribute('loading', 'lazy');
+    expect(normalImage).toHaveAttribute('fetchpriority', 'auto');
   });
 
   it('알 수 없는 작성자와 날짜를 대체 표시하고 실패한 썸네일을 숨긴다', () => {
@@ -57,17 +57,11 @@ describe('스토리 카드', () => {
     expect(image).toHaveStyle({ display: 'none' });
   });
 
-  it('유효하지 않은 timestamp가 있어도 대표 카드 메타데이터 렌더링을 깨뜨리지 않는다', () => {
+  it('유효하지 않은 timestamp가 있어도 메타데이터 렌더링을 깨뜨리지 않는다', () => {
     renderWithRouter(
-      <StoryCard
-        story={makeStory({ id: 505, time: Number.MAX_VALUE })}
-        variant="featured"
-      />,
+      <StoryCard story={makeStory({ id: 505, time: Number.MAX_VALUE })} />,
     );
 
-    const time = screen.getByText(UNKNOWN_DATE_LABEL);
-
-    expect(time.tagName).toBe('TIME');
-    expect(time).not.toHaveAttribute('datetime');
+    expect(screen.getByText(UNKNOWN_DATE_LABEL)).toBeInTheDocument();
   });
 });

@@ -60,7 +60,6 @@
 
     --ds-shadow-card: 0 1px 2px rgb(21 23 26 / 0.06), 0 8px 24px rgb(21 23 26 / 0.08);
     --ds-shadow-raised: 0 12px 36px rgb(21 23 26 / 0.12);
-    --ds-shadow-featured-card: 0 18px 50px rgb(21 23 26 / 0.10);
     --ds-shadow-tab: 0 1px 2px rgb(21 23 26 / 0.06);
 
     --ds-layout-page-max: 72rem;
@@ -96,7 +95,6 @@
 
     --ds-shadow-card: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.28);
     --ds-shadow-raised: 0 18px 44px rgb(0 0 0 / 0.36);
-    --ds-shadow-featured-card: 0 22px 56px rgb(0 0 0 / 0.34);
     --ds-shadow-tab: 0 1px 2px rgb(0 0 0 / 0.28);
 
     color-scheme: dark;

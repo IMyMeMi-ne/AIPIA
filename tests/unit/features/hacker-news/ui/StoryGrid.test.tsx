@@ -16,23 +16,26 @@ describe('스토리 그리드', () => {
     ).toBeInTheDocument();
   });
 
-  it('첫 스토리는 대표/모바일로, 전체 스토리는 데스크톱 그리드로 렌더링한다', () => {
+  it('각 스토리를 강조 카드 없이 동일한 반응형 리스트 카드로 렌더링한다', () => {
     const first = makeStory({ id: 1, title: 'First story' });
     const second = makeStory({ id: 2, title: 'Second story' });
 
-    renderWithRouter(<StoryGrid stories={[first, second]} />);
+    const { container } = renderWithRouter(
+      <StoryGrid stories={[first, second]} />,
+    );
 
     expect(
-      screen.getAllByRole('link', { name: 'Read story: First story' }),
-    ).toHaveLength(2);
-    expect(
-      screen.getAllByRole('link', { name: 'Read story: Second story' }),
-    ).toHaveLength(2);
-    expect(
-      screen.getAllByRole('link', { name: 'Read story: First story' })[0],
+      screen.getByRole('link', { name: 'Read story: First story' }),
     ).toHaveAttribute('href', '/stories/1');
     expect(
-      screen.getAllByRole('link', { name: 'Read story: Second story' })[0],
+      screen.getByRole('link', { name: 'Read story: Second story' }),
     ).toHaveAttribute('href', '/stories/2');
+    const images = container.querySelectorAll('img');
+    expect(images).toHaveLength(2);
+    expect(images[0]).toHaveAttribute('loading', 'eager');
+    expect(images[0]).toHaveAttribute('fetchpriority', 'high');
+    expect(images[1]).toHaveAttribute('loading', 'lazy');
+    expect(images[1]).toHaveAttribute('fetchpriority', 'auto');
+    expect(screen.queryByText('Lead story')).not.toBeInTheDocument();
   });
 });
