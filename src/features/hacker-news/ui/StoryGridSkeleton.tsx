@@ -1,8 +1,8 @@
-import { Skeleton } from '@/shared/ui/Skeleton.tsx'
-import { Surface } from '@/shared/ui/Surface.tsx'
+import { Skeleton } from '@/shared/ui/Skeleton.tsx';
+import { Surface } from '@/shared/ui/Surface.tsx';
 
-const COMPACT_STORY_SKELETON_COUNT = 6
-const DESKTOP_STORY_SKELETON_COUNT = 8
+const COMPACT_STORY_SKELETON_COUNT = 6;
+const DESKTOP_STORY_SKELETON_COUNT = 9;
 
 function StoryMetaSkeleton() {
   return (
@@ -11,7 +11,7 @@ function StoryMetaSkeleton() {
       <Skeleton className="size-1.5 rounded-full" />
       <Skeleton className="h-4 w-20" />
     </div>
-  )
+  );
 }
 
 function FeaturedStoryCardSkeleton() {
@@ -21,12 +21,12 @@ function FeaturedStoryCardSkeleton() {
         <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
         <div className="absolute inset-x-0 bottom-0 space-y-3 bg-linear-to-t from-black/25 via-black/10 to-transparent p-4 pt-16">
           <div className="flex items-center gap-2">
-            <Skeleton className="h-px w-7 bg-[var(--ds-color-on-image-skeleton-muted)]" />
-            <Skeleton className="h-3 w-24 bg-[var(--ds-color-on-image-skeleton-muted)]" />
+            <Skeleton className="h-px w-7 bg-(--ds-color-on-image-skeleton-muted)" />
+            <Skeleton className="h-3 w-24 bg-(--ds-color-on-image-skeleton-muted)" />
           </div>
           <div className="space-y-2">
-            <Skeleton className="h-7 w-11/12 bg-[var(--ds-color-on-image-skeleton)]" />
-            <Skeleton className="h-7 w-4/5 bg-[var(--ds-color-on-image-skeleton)]" />
+            <Skeleton className="h-7 w-11/12 bg-(--ds-color-on-image-skeleton)" />
+            <Skeleton className="h-7 w-4/5 bg-(--ds-color-on-image-skeleton)" />
           </div>
         </div>
       </div>
@@ -34,7 +34,7 @@ function FeaturedStoryCardSkeleton() {
         <StoryMetaSkeleton />
       </article>
     </Surface>
-  )
+  );
 }
 
 function CompactStoryCardSkeleton() {
@@ -53,7 +53,7 @@ function CompactStoryCardSkeleton() {
         </div>
       </article>
     </div>
-  )
+  );
 }
 
 function DesktopStoryCardSkeleton() {
@@ -78,7 +78,7 @@ function DesktopStoryCardSkeleton() {
         </dl>
       </article>
     </Surface>
-  )
+  );
 }
 
 function StoryGridSkeleton() {
@@ -104,7 +104,7 @@ function StoryGridSkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export default StoryGridSkeleton
+export default StoryGridSkeleton;
