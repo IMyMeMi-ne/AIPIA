@@ -13,9 +13,16 @@ import {
 } from '@/shared/lib/url.ts'
 
 describe('날짜 포맷 헬퍼', () => {
-  it('유효한 날짜와 유닉스 초 값을 연-월-일 형식으로 변환한다', () => {
-    expect(formatDateToYyyyMmDd(new Date(2024, 0, 2))).toBe('2024-01-02')
-    expect(formatUnixSecondsDate(new Date(2024, 0, 2, 12).getTime() / 1000)).toBe('2024-01-02')
+  it('유효한 날짜와 유닉스 초 값을 UTC 기준 연-월-일 형식으로 변환한다', () => {
+    expect(formatDateToYyyyMmDd(new Date(Date.UTC(2024, 0, 2)))).toBe('2024-01-02')
+    expect(formatUnixSecondsDate(Date.UTC(2024, 0, 2, 12) / 1000)).toBe('2024-01-02')
+  })
+
+  it('로컬 타임존에 관계없이 UTC 날짜 경계를 따른다', () => {
+    const dateNearUtcMidnight = new Date('2024-01-02T00:30:00.000Z')
+
+    expect(formatDateToYyyyMmDd(dateNearUtcMidnight)).toBe('2024-01-02')
+    expect(formatUnixSecondsDate(dateNearUtcMidnight.getTime() / 1000)).toBe('2024-01-02')
   })
 
   it('날짜가 없거나 유효하지 않으면 알 수 없음 라벨을 반환한다', () => {

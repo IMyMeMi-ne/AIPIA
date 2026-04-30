@@ -9,9 +9,9 @@ export function formatDateToYyyyMmDd(date?: Date) {
     return UNKNOWN_DATE_LABEL
   }
 
-  const year = date.getFullYear()
-  const month = padDatePart(date.getMonth() + 1)
-  const day = padDatePart(date.getDate())
+  const year = date.getUTCFullYear()
+  const month = padDatePart(date.getUTCMonth() + 1)
+  const day = padDatePart(date.getUTCDate())
 
   return `${year}-${month}-${day}`
 }
