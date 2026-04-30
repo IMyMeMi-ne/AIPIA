@@ -188,6 +188,42 @@ describe('스토리 그리드', () => {
     expect(loadMore).not.toHaveBeenCalled();
   });
 
+  it('loader row가 viewport 바로 아래 trigger 거리 안에 들어오면 다음 페이지를 미리 요청한다', () => {
+    const loadMore = vi.fn();
+
+    setVirtualRows([0, 2]);
+    setVirtualizerViewport({ height: 560, scrollOffset: 0 });
+
+    renderWithRouter(
+      <StoryGrid
+        hasNextPage
+        isFetchingNextPage={false}
+        onLoadMore={loadMore}
+        stories={[makeStory({ id: 1 }), makeStory({ id: 2 })]}
+      />,
+    );
+
+    expect(loadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it('첫 렌더에서 loader row가 trigger 거리보다 멀면 자동 요청하지 않는다', () => {
+    const loadMore = vi.fn();
+
+    setVirtualRows([0, 2]);
+    setVirtualizerViewport({ height: 520, scrollOffset: 0 });
+
+    renderWithRouter(
+      <StoryGrid
+        hasNextPage
+        isFetchingNextPage={false}
+        onLoadMore={loadMore}
+        stories={[makeStory({ id: 1 }), makeStory({ id: 2 })]}
+      />,
+    );
+
+    expect(loadMore).not.toHaveBeenCalled();
+  });
+
   it('non-zero scrollMargin에서도 window viewport와 교차한 loader row만 자동 요청한다', () => {
     const loadMore = vi.fn();
 
@@ -335,7 +371,7 @@ describe('스토리 그리드', () => {
     await waitFor(() => expect(loadMore).toHaveBeenCalledTimes(2));
   });
 
-  it('다음 페이지를 불러오는 동안 loader 버튼을 비활성화한다', () => {
+  it('다음 페이지를 불러오는 동안 loader는 클릭 없는 loading status로 렌더링한다', () => {
     setVirtualRows([1]);
 
     renderWithRouter(
@@ -348,7 +384,10 @@ describe('스토리 그리드', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: 'Loading more stories...' }),
-    ).toBeDisabled();
+      screen.getByRole('status', { name: 'Loading more stories...' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Loading more stories...' }),
+    ).not.toBeInTheDocument();
   });
 });

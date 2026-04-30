@@ -23,6 +23,7 @@ import {
   getEstimatedRowHeight,
   getInitialIsDesktop,
   getInitialListWidth,
+  getLoadMoreTriggerAhead,
   getStoryGridAutoLoadKey,
   getStoryGridColumnCount,
   getViewportBounds,
@@ -152,6 +153,7 @@ function StoryGrid({
   const loaderRowIsVisible = isLoaderRowVisible({
     hasNextPage,
     loaderRowIndex,
+    triggerAhead: getLoadMoreTriggerAhead(),
     viewportEnd: viewportBounds.end,
     viewportStart: viewportBounds.start,
     virtualRows,
@@ -173,10 +175,7 @@ function StoryGrid({
       return;
     }
 
-    if (
-      !isFetchingNextPage &&
-      autoLoadKeyRef.current !== autoLoadKey
-    ) {
+    if (!isFetchingNextPage && autoLoadKeyRef.current !== autoLoadKey) {
       autoLoadKeyRef.current = autoLoadKey;
       onLoadMore?.();
     }
@@ -236,17 +235,21 @@ function StoryGrid({
                     {loadMoreError}
                   </p>
                 ) : null}
-                <Button
-                  disabled={isFetchingNextPage}
-                  onClick={() => onLoadMore?.()}
-                  variant="secondary"
-                >
-                  {isFetchingNextPage
-                    ? 'Loading more stories...'
-                    : loadMoreError === undefined
+                {isFetchingNextPage ? (
+                  <div
+                    aria-label="Loading more stories..."
+                    className="inline-flex min-h-10 items-center justify-center rounded-(--ds-radius-control) border border-(--ds-color-border) bg-(--ds-color-surface) px-4 text-sm font-semibold text-app-muted"
+                    role="status"
+                  >
+                    Loading more stories...
+                  </div>
+                ) : (
+                  <Button onClick={() => onLoadMore?.()} variant="secondary">
+                    {loadMoreError === undefined
                       ? 'Load more stories'
                       : 'Try loading more stories again'}
-                </Button>
+                  </Button>
+                )}
               </div>
             );
           }

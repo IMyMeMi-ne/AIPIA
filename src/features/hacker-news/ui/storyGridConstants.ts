@@ -22,5 +22,8 @@ export const ESTIMATED_MOBILE_ROW_HEIGHT_PX = 113;
 // Desktop card row의 초기 virtualizer 추정 높이.
 export const ESTIMATED_DESKTOP_ROW_HEIGHT_PX = 390;
 
-// 스크롤 전후로 미리 렌더링할 목표 story 개수. 실제 overscan row 수는 column 수에 맞춰 계산한다.
+// Loader row가 viewport에 닿기 전 다음 page를 미리 요청할 거리.
+export const LOAD_MORE_TRIGGER_AHEAD_PX = 120;
+
+// 스크롤 전후로 미리 렌더링할 목표 story 개수. 실제 overscan row 수는 column 수에 맞춰 계산.
 export const VIRTUAL_STORY_OVERSCAN_TARGET = 4;

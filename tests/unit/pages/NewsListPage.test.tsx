@@ -176,7 +176,7 @@ describe('뉴스 목록 페이지', () => {
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
-  it('다음 페이지를 불러오는 동안 더보기 버튼을 비활성화한다', () => {
+  it('다음 페이지를 불러오는 동안 클릭 없는 loading status를 보여준다', () => {
     vi.mocked(useGetHackerNewsList).mockReturnValue(
       hackerNewsListSuccess([storyPage([makeStory({ id: 1 })], 1)], {
         hasNextPage: true,
@@ -187,8 +187,11 @@ describe('뉴스 목록 페이지', () => {
     renderWithRouter(<NewsListPage />);
 
     expect(
-      screen.getByRole('button', { name: 'Loading more stories...' }),
-    ).toBeDisabled();
+      screen.getByRole('status', { name: 'Loading more stories...' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Loading more stories...' }),
+    ).not.toBeInTheDocument();
   });
 
   it('다음 페이지 조회만 실패하면 기존 스토리와 loader retry path를 유지한다', async () => {

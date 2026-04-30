@@ -1,6 +1,7 @@
 import {
   ESTIMATED_DESKTOP_ROW_HEIGHT_PX,
   ESTIMATED_MOBILE_ROW_HEIGHT_PX,
+  LOAD_MORE_TRIGGER_AHEAD_PX,
   MOBILE_COLUMN_COUNT,
   STORY_GRID_CARD_MIN_WIDTH_PX,
   STORY_GRID_DESKTOP_BREAKPOINT_PX,
@@ -52,6 +53,10 @@ export function getEstimatedRowHeight(columnCount: number) {
   return columnCount === MOBILE_COLUMN_COUNT
     ? ESTIMATED_MOBILE_ROW_HEIGHT_PX
     : ESTIMATED_DESKTOP_ROW_HEIGHT_PX;
+}
+
+export function getLoadMoreTriggerAhead() {
+  return LOAD_MORE_TRIGGER_AHEAD_PX;
 }
 
 // TanStack Virtual overscan은 row 개수 기준이라 column 수로 나눠 대략 같은 story 수를 유지한다.
@@ -113,15 +118,17 @@ export function getViewportBounds({
 type IsLoaderRowVisibleOptions = {
   hasNextPage: boolean;
   loaderRowIndex: number;
+  triggerAhead: number;
   viewportEnd: number;
   viewportStart: number;
   virtualRows: VirtualRowBounds[];
 };
 
-// overscan에 포함된 loader row가 아니라 실제 viewport와 교차한 loader row만 자동 load 대상으로 봄
+// overscan에 포함된 loader row가 아니라 viewport 근처 trigger 범위에 들어온 loader row만 자동 load 대상으로 봄
 export function isLoaderRowVisible({
   hasNextPage,
   loaderRowIndex,
+  triggerAhead,
   viewportEnd,
   viewportStart,
   virtualRows,
@@ -132,7 +139,7 @@ export function isLoaderRowVisible({
       (row) =>
         row.index === loaderRowIndex &&
         row.end > viewportStart &&
-        row.start < viewportEnd,
+        row.start < viewportEnd + triggerAhead,
     )
   );
 }
