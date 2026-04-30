@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   formatUnixSecondsDate,
   formatUnixSecondsDateTime,
@@ -33,12 +33,14 @@ function StoryMeta({ story }: { story: HackerNewsStory }) {
 }
 
 function StoryCard({ priority = false, story }: StoryCardProps) {
+  const { search } = useLocation();
+
   return (
     <div className="group min-w-0 overflow-hidden lg:h-full lg:rounded-(--ds-radius-card) lg:border lg:border-(--ds-color-border) lg:bg-(--ds-color-surface) lg:shadow-sm lg:transition-[box-shadow,transform] lg:hover:-translate-y-0.5 lg:hover:shadow-(--ds-shadow-card) lg:focus-within:-translate-y-0.5 lg:focus-within:shadow-(--ds-shadow-card)">
       <Link
         aria-label={`Read story: ${story.title}`}
         className="grid min-w-0 grid-cols-[5.25rem_minmax(0,1fr)] gap-3 py-4 lg:flex lg:h-full lg:flex-col lg:gap-0 lg:py-0"
-        to={`/stories/${story.id}`}
+        to={{ pathname: `/stories/${story.id}`, search }}
       >
         <div className="relative h-20 overflow-hidden rounded-(--ds-radius-sm) bg-(--ds-color-surface-muted) lg:aspect-3/2 lg:h-auto lg:rounded-none">
           <span

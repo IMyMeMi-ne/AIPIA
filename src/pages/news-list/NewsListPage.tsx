@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useGetHackerNewsList } from '@/features/hacker-news/model/useGetHackerNewsList.ts';
 import FeedTabs from '@/features/hacker-news/ui/FeedTabs.tsx';
 import StoryGrid from '@/features/hacker-news/ui/StoryGrid.tsx';
 import StoryGridSkeleton from '@/features/hacker-news/ui/StoryGridSkeleton.tsx';
-import type { FeedType } from '@/features/hacker-news/model/types.ts';
+import { FEED_TYPES, type FeedType } from '@/features/hacker-news/model/types.ts';
 import { Button } from '@/shared/ui/Button.tsx';
 import { ErrorState } from '@/shared/ui/ErrorState.tsx';
 import { PageShell } from '@/shared/ui/PageShell.tsx';
@@ -16,6 +17,16 @@ const feedHeadings: Record<FeedType, string> = {
   best: 'Best Stories',
 };
 
+function isFeedType(feed: string | null): feed is FeedType {
+  return FEED_TYPES.includes(feed as FeedType);
+}
+
+function getFeedFromSearchParams(searchParams: URLSearchParams) {
+  const feed = searchParams.get('feed');
+
+  return isFeedType(feed) ? feed : 'top';
+}
+
 function getErrorMessage(error: unknown) {
   return error instanceof Error
     ? error.message
@@ -23,7 +34,26 @@ function getErrorMessage(error: unknown) {
 }
 
 function NewsListPage() {
-  const [selectedFeed, setSelectedFeed] = useState<FeedType>('top');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedFeed = getFeedFromSearchParams(searchParams);
+  const handleSelectFeed = useCallback(
+    (feed: FeedType) => {
+      const nextSearchParams = new URLSearchParams(searchParams);
+
+      if (feed === 'top') {
+        nextSearchParams.delete('feed');
+      } else {
+        nextSearchParams.set('feed', feed);
+      }
+
+      if (nextSearchParams.toString() === searchParams.toString()) {
+        return;
+      }
+
+      setSearchParams(nextSearchParams);
+    },
+    [searchParams, setSearchParams],
+  );
   const {
     error,
     fetchNextPage,
@@ -47,14 +77,14 @@ function NewsListPage() {
 
   return (
     <PageShell
-      actions={<FeedTabs onSelectFeed={setSelectedFeed} selectedFeed={selectedFeed} />}
+      actions={<FeedTabs onSelectFeed={handleSelectFeed} selectedFeed={selectedFeed} />}
       titleActions={<ThemeToggle />}
       descriptionClassName="hidden lg:block"
       eyebrowClassName="hidden lg:block"
       title="AIPIA News"
     >
       <Surface
-        className="border-0 bg-transparent shadow-none lg:border lg:border-(--ds-color-border) lg:bg-(--ds-color-surface) lg:shadow-(--ds-shadow-card)"
+        className="overflow-hidden border-0 bg-transparent shadow-none lg:border lg:border-(--ds-color-border) lg:bg-(--ds-color-surface) lg:shadow-(--ds-shadow-card)"
         elevated
       >
         <div className="hidden flex-col gap-2 border-b border-(--ds-color-border) bg-(--ds-color-surface) p-4 lg:flex lg:p-5">

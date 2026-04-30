@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { storyDetailQueryOptions } from '@/features/hacker-news/api/queries.ts';
 import StoryDetailPanel from '@/features/hacker-news/ui/StoryDetailPanel.tsx';
@@ -33,6 +33,7 @@ function getErrorMessage(error: unknown) {
 }
 
 function StoryDetailPage() {
+  const { search } = useLocation();
   const navigate = useNavigate();
   const { storyId: storyIdParam } = useParams<{ storyId: string }>();
   const storyId = parseStoryId(storyIdParam);
@@ -44,7 +45,7 @@ function StoryDetailPage() {
   return (
     <PageShell
       titleActions={<ThemeToggle />}
-      onTitleClick={() => navigate('/')}
+      onTitleClick={() => navigate({ pathname: '/', search })}
       title="AIPIA News"
     >
       {storyId === null ? (

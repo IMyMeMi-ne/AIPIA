@@ -99,6 +99,37 @@ describe('뉴스 목록 페이지', () => {
     );
   });
 
+  it('URL feed query를 초기 선택 피드로 사용한다', () => {
+    vi.mocked(useGetHackerNewsList).mockReturnValue(
+      hackerNewsListSuccess([storyPage([makeStory({ id: 7, title: 'Fresh story' })])]),
+    );
+
+    renderWithRouter(<NewsListPage />, { route: '/?feed=new' });
+
+    expect(
+      screen.getByRole('heading', { name: 'New Stories' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'New' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(useGetHackerNewsList).toHaveBeenLastCalledWith('new');
+    expect(
+      screen.getByRole('link', { name: 'Read story: Fresh story' }),
+    ).toHaveAttribute('href', '/stories/7?feed=new');
+  });
+
+  it('지원하지 않는 feed query는 기본 톱 피드로 처리한다', () => {
+    vi.mocked(useGetHackerNewsList).mockReturnValue(hackerNewsListLoading());
+
+    renderWithRouter(<NewsListPage />, { route: '/?feed=ask' });
+
+    expect(
+      screen.getByRole('heading', { name: 'Top Stories' }),
+    ).toBeInTheDocument();
+    expect(useGetHackerNewsList).toHaveBeenLastCalledWith('top');
+  });
+
   it('선택된 피드를 불러오는 동안 로딩 스켈레톤을 보여준다', () => {
     vi.mocked(useGetHackerNewsList).mockReturnValue(hackerNewsListLoading());
 
@@ -241,7 +272,7 @@ describe('뉴스 목록 페이지', () => {
     const user = userEvent.setup();
 
     vi.mocked(useGetHackerNewsList).mockReturnValue(
-      hackerNewsListSuccess([storyPage([makeStory({ id: 1 })])]),
+      hackerNewsListSuccess([storyPage([makeStory({ id: 1, title: 'Switchable story' })])]),
     );
 
     renderWithRouter(<NewsListPage />);
@@ -256,6 +287,9 @@ describe('뉴스 목록 페이지', () => {
       'true',
     );
     expect(useGetHackerNewsList).toHaveBeenLastCalledWith('new');
+    expect(
+      screen.getByRole('link', { name: 'Read story: Switchable story' }),
+    ).toHaveAttribute('href', '/stories/1?feed=new');
 
     await user.click(screen.getByRole('button', { name: 'Best' }));
     expect(
@@ -266,5 +300,8 @@ describe('뉴스 목록 페이지', () => {
       'true',
     );
     expect(useGetHackerNewsList).toHaveBeenLastCalledWith('best');
+    expect(
+      screen.getByRole('link', { name: 'Read story: Switchable story' }),
+    ).toHaveAttribute('href', '/stories/1?feed=best');
   });
 });

@@ -25,6 +25,16 @@ describe('스토리 카드', () => {
     expect(screen.queryByText('Lead story')).not.toBeInTheDocument();
   });
 
+  it('현재 피드 query를 상세 링크에 유지한다', () => {
+    const story = makeStory({ id: 456, title: 'New feed story' });
+
+    renderWithRouter(<StoryCard story={story} />, { route: '/?feed=new' });
+
+    expect(
+      screen.getByRole('link', { name: 'Read story: New feed story' }),
+    ).toHaveAttribute('href', '/stories/456?feed=new');
+  });
+
   it('우선순위 카드만 eager/high 이미지 로딩 힌트를 사용한다', () => {
     const story = makeStory({ id: 55, title: 'Priority story' });
 

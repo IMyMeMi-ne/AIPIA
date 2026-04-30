@@ -13,6 +13,7 @@ import { makeStory } from '../../utils/stories.ts';
 import { renderWithTheme } from '../../utils/react.tsx';
 
 const routerMocks = vi.hoisted(() => ({
+  location: { search: '' },
   navigate: vi.fn(),
   params: { storyId: '123' as string | undefined },
 }));
@@ -22,6 +23,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 
   return {
     ...actual,
+    useLocation: () => routerMocks.location,
     useNavigate: () => routerMocks.navigate,
     useParams: () => routerMocks.params,
   };
@@ -42,6 +44,7 @@ function setStoryId(storyId: string | undefined) {
 
 describe('스토리 상세 페이지', () => {
   beforeEach(() => {
+    routerMocks.location.search = '';
     routerMocks.navigate.mockReset();
     routerMocks.params.storyId = '123';
     vi.mocked(useQuery).mockReset();
@@ -143,6 +146,25 @@ describe('스토리 상세 페이지', () => {
     renderWithTheme(<StoryDetailPage />);
 
     await user.click(screen.getByRole('button', { name: 'AIPIA News' }));
-    expect(routerMocks.navigate).toHaveBeenCalledWith('/');
+    expect(routerMocks.navigate).toHaveBeenCalledWith({
+      pathname: '/',
+      search: '',
+    });
+  });
+
+  it('페이지 제목 홈 이동 시 현재 feed query를 유지한다', async () => {
+    const user = userEvent.setup();
+
+    routerMocks.location.search = '?feed=new';
+    setStoryId('123');
+    vi.mocked(useQuery).mockReturnValue(querySuccess(makeStory({ id: 123 })));
+
+    renderWithTheme(<StoryDetailPage />);
+
+    await user.click(screen.getByRole('button', { name: 'AIPIA News' }));
+    expect(routerMocks.navigate).toHaveBeenCalledWith({
+      pathname: '/',
+      search: '?feed=new',
+    });
   });
 });
