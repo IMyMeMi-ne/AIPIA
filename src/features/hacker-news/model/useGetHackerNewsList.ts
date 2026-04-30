@@ -15,6 +15,13 @@ export function useGetHackerNewsList(feedType: FeedType) {
     () => query.data?.pages.flatMap((page) => page.stories) ?? [],
     [query.data],
   );
+  const paginationKey = useMemo(() => {
+    const pages = query.data?.pages ?? [];
+    const lastPage = pages.at(-1);
+    const nextCursor = lastPage?.nextPageParam?.cursor ?? 'end';
+
+    return `${feedType}:${pages.length}:${nextCursor}`;
+  }, [feedType, query.data]);
   const fetchNextPage = useCallback(async () => {
     if (
       fetchNextPageInFlightRef.current ||
@@ -36,6 +43,7 @@ export function useGetHackerNewsList(feedType: FeedType) {
   return {
     ...query,
     fetchNextPage,
+    paginationKey,
     stories,
   };
 }

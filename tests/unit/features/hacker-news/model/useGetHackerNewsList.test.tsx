@@ -31,6 +31,13 @@ function storyPage(storyIds: number[]) {
   };
 }
 
+function storyPageWithCursor(storyIds: number[], cursor: number | null) {
+  return {
+    nextPageParam: cursor === null ? null : { cursor, storyIds: [] },
+    stories: storyIds.map((id) => makeStory({ id })),
+  };
+}
+
 function deferredPromise() {
   let resolve!: () => void;
   const promise = new Promise<void>((promiseResolve) => {
@@ -50,6 +57,20 @@ describe('useGetHackerNewsList', () => {
 
     expect(feedStoriesInfiniteQueryOptions).toHaveBeenCalledWith('top');
     expect(result.current.stories).toEqual([1, 2, 3].map((id) => makeStory({ id })));
+  });
+
+  it('표시 story가 없어도 query pagination 진행 상태를 key로 노출한다', () => {
+    vi.mocked(useInfiniteQuery).mockReturnValue(
+      infiniteQuerySuccess([
+        storyPageWithCursor([], 30),
+        storyPageWithCursor([], 60),
+      ]),
+    );
+
+    const { result } = renderHook(() => useGetHackerNewsList('top'));
+
+    expect(result.current.stories).toEqual([]);
+    expect(result.current.paginationKey).toBe('top:2:60');
   });
 
   it('이미 다음 페이지 요청이 진행 중이면 중복 fetchNextPage 호출을 막는다', async () => {

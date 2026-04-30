@@ -15,41 +15,6 @@ vi.mock('@/features/hacker-news/model/useGetHackerNewsList.ts', () => ({
   useGetHackerNewsList: vi.fn(),
 }));
 
-let intersectionObserverCallback: IntersectionObserverCallback | null = null;
-let intersectionObserverObserve = vi.fn();
-let intersectionObserverDisconnect = vi.fn();
-
-function installFakeIntersectionObserver() {
-  intersectionObserverCallback = null;
-  intersectionObserverObserve = vi.fn();
-  intersectionObserverDisconnect = vi.fn();
-
-  class FakeIntersectionObserver implements IntersectionObserver {
-    readonly root = null;
-    readonly rootMargin = '';
-    readonly scrollMargin = '';
-    readonly thresholds = [];
-
-    constructor(callback: IntersectionObserverCallback) {
-      intersectionObserverCallback = callback;
-    }
-
-    observe = intersectionObserverObserve;
-    unobserve = vi.fn();
-    disconnect = intersectionObserverDisconnect;
-    takeRecords = () => [];
-  }
-
-  vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
-}
-
-function triggerIntersection(isIntersecting: boolean) {
-  intersectionObserverCallback?.(
-    [{ isIntersecting } as IntersectionObserverEntry],
-    {} as IntersectionObserver,
-  );
-}
-
 function storyPage(stories: ReturnType<typeof makeStory>[], cursor: number | null = null) {
   return {
     nextPageParam: cursor === null ? null : { cursor, storyIds: [] },
@@ -60,6 +25,7 @@ function storyPage(stories: ReturnType<typeof makeStory>[], cursor: number | nul
 function hackerNewsListLoading() {
   return {
     ...infiniteQueryLoading(),
+    paginationKey: 'top:0:end',
     stories: [],
   } as unknown as ReturnType<typeof useGetHackerNewsList>;
 }
@@ -67,6 +33,7 @@ function hackerNewsListLoading() {
 function hackerNewsListError(error: unknown, refetch = vi.fn()) {
   return {
     ...infiniteQueryError(error, refetch),
+    paginationKey: 'top:0:end',
     stories: [],
   } as unknown as ReturnType<typeof useGetHackerNewsList>;
 }
@@ -81,6 +48,26 @@ function hackerNewsListSuccess(
 ) {
   return {
     ...infiniteQuerySuccess(pages, options),
+    paginationKey: `top:${pages.length}:${pages.at(-1)?.nextPageParam?.cursor ?? 'end'}`,
+    stories: pages.flatMap((page) => page.stories),
+  } as unknown as ReturnType<typeof useGetHackerNewsList>;
+}
+
+function hackerNewsListNextPageError(
+  pages: ReturnType<typeof storyPage>[],
+  error: unknown,
+  fetchNextPage = vi.fn(),
+) {
+  return {
+    ...infiniteQueryError(error),
+    data: {
+      pageParams: pages.map((_, index) => index),
+      pages,
+    },
+    fetchNextPage,
+    hasNextPage: true,
+    isFetchNextPageError: true,
+    paginationKey: `top:${pages.length}:${pages.at(-1)?.nextPageParam?.cursor ?? 'end'}`,
     stories: pages.flatMap((page) => page.stories),
   } as unknown as ReturnType<typeof useGetHackerNewsList>;
 }
@@ -89,7 +76,6 @@ function hackerNewsListSuccess(
 describe('뉴스 목록 페이지', () => {
   beforeEach(() => {
     vi.mocked(useGetHackerNewsList).mockReset();
-    intersectionObserverCallback = null;
   });
 
   afterEach(() => {
@@ -145,8 +131,7 @@ describe('뉴스 목록 페이지', () => {
     ).toHaveAttribute('href', '/stories/3');
   });
 
-  it('하단 sentinel이 viewport에 가까워지면 다음 페이지를 요청하고 정리 시 observer를 해제한다', () => {
-    installFakeIntersectionObserver();
+  it('가상 리스트 loader row가 가시 범위에 들어오면 다음 페이지를 요청한다', () => {
     const fetchNextPage = vi.fn();
     vi.mocked(useGetHackerNewsList).mockReturnValue(
       hackerNewsListSuccess([storyPage([makeStory({ id: 1 })], 1)], {
@@ -155,14 +140,23 @@ describe('뉴스 목록 페이지', () => {
       }),
     );
 
-    const { unmount } = renderWithRouter(<NewsListPage />);
+    renderWithRouter(<NewsListPage />);
 
-    expect(intersectionObserverObserve).toHaveBeenCalledTimes(1);
-    triggerIntersection(true);
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
 
-    unmount();
-    expect(intersectionObserverDisconnect).toHaveBeenCalledTimes(1);
+  it('데스크톱 surface가 가상 row 하단을 자르지 않도록 overflow를 숨기지 않는다', () => {
+    vi.mocked(useGetHackerNewsList).mockReturnValue(
+      hackerNewsListSuccess([storyPage([makeStory({ id: 1 })], 1)], {
+        hasNextPage: true,
+      }),
+    );
+
+    const { container } = renderWithRouter(<NewsListPage />);
+
+    expect(
+      container.querySelector('.lg\\:overflow-hidden'),
+    ).not.toBeInTheDocument();
   });
 
   it('다음 페이지가 있으면 더보기 버튼으로 인피니트 쿼리 다음 페이지를 요청한다', async () => {
@@ -176,6 +170,7 @@ describe('뉴스 목록 페이지', () => {
     );
 
     renderWithRouter(<NewsListPage />);
+    fetchNextPage.mockClear();
 
     await user.click(screen.getByRole('button', { name: 'Load more stories' }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
@@ -194,6 +189,33 @@ describe('뉴스 목록 페이지', () => {
     expect(
       screen.getByRole('button', { name: 'Loading more stories...' }),
     ).toBeDisabled();
+  });
+
+  it('다음 페이지 조회만 실패하면 기존 스토리와 loader retry path를 유지한다', async () => {
+    const user = userEvent.setup();
+    const fetchNextPage = vi.fn();
+    vi.mocked(useGetHackerNewsList).mockReturnValue(
+      hackerNewsListNextPageError(
+        [storyPage([makeStory({ id: 1, title: 'Persisted story' })], 1)],
+        new Error('next page failed'),
+        fetchNextPage,
+      ),
+    );
+
+    renderWithRouter(<NewsListPage />);
+
+    expect(
+      screen.queryByText('Could not load stories'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Read story: Persisted story' }),
+    ).toHaveAttribute('href', '/stories/1');
+    expect(screen.getByRole('alert')).toHaveTextContent('next page failed');
+
+    await user.click(
+      screen.getByRole('button', { name: 'Try loading more stories again' }),
+    );
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
   it('오류 상태를 렌더링하고 다시 시도 시 재조회한다', async () => {

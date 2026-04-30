@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useGetHackerNewsList } from '@/features/hacker-news/model/useGetHackerNewsList.ts';
 import FeedTabs from '@/features/hacker-news/ui/FeedTabs.tsx';
 import StoryGrid from '@/features/hacker-news/ui/StoryGrid.tsx';
@@ -24,48 +24,26 @@ function getErrorMessage(error: unknown) {
 
 function NewsListPage() {
   const [selectedFeed, setSelectedFeed] = useState<FeedType>('top');
-  const loadMoreRef = useRef<HTMLDivElement>(null);
   const {
     error,
     fetchNextPage,
     hasNextPage,
+    data,
     isError,
+    isFetchNextPageError,
     isFetchingNextPage,
     isLoading,
     isSuccess,
+    paginationKey,
     refetch,
     stories,
   } = useGetHackerNewsList(selectedFeed);
-
-  useEffect(() => {
-    const loadMoreTarget = loadMoreRef.current;
-
-    if (
-      loadMoreTarget === null ||
-      !hasNextPage ||
-      typeof IntersectionObserver === 'undefined'
-    ) {
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting && !isFetchingNextPage) {
-          void fetchNextPage();
-        }
-      },
-      { rootMargin: '120px 0px' },
-    );
-
-    observer.observe(loadMoreTarget);
-
-    return () => observer.disconnect();
-  }, [
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    selectedFeed,
-  ]);
+  const hasLoadedPages = (data?.pages.length ?? 0) > 0;
+  const loadMoreErrorMessage = isFetchNextPageError
+    ? getErrorMessage(error)
+    : undefined;
+  const showInitialError = isError && !hasLoadedPages;
+  const showStoryGrid = isSuccess || hasLoadedPages;
 
   return (
     <PageShell
@@ -76,7 +54,7 @@ function NewsListPage() {
       title="AIPIA News"
     >
       <Surface
-        className="border-0 bg-transparent shadow-none lg:overflow-hidden lg:border lg:border-(--ds-color-border) lg:bg-(--ds-color-surface) lg:shadow-(--ds-shadow-card)"
+        className="border-0 bg-transparent shadow-none lg:border lg:border-(--ds-color-border) lg:bg-(--ds-color-surface) lg:shadow-(--ds-shadow-card)"
         elevated
       >
         <div className="hidden flex-col gap-2 border-b border-(--ds-color-border) bg-(--ds-color-surface) p-4 lg:flex lg:p-5">
@@ -90,7 +68,7 @@ function NewsListPage() {
         <div className="p-0 lg:p-6">
           {isLoading ? <StoryGridSkeleton /> : null}
 
-          {isError ? (
+          {showInitialError ? (
             <ErrorState
               action={
                 <Button
@@ -105,20 +83,15 @@ function NewsListPage() {
             />
           ) : null}
 
-          {isSuccess ? <StoryGrid stories={stories} /> : null}
-
-          {isSuccess && hasNextPage ? (
-            <div ref={loadMoreRef} className="mt-6 flex justify-center">
-              <Button
-                disabled={isFetchingNextPage}
-                onClick={() => void fetchNextPage()}
-                variant="secondary"
-              >
-                {isFetchingNextPage
-                  ? 'Loading more stories...'
-                  : 'Load more stories'}
-              </Button>
-            </div>
+          {showStoryGrid ? (
+            <StoryGrid
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              loadMoreError={loadMoreErrorMessage}
+              onLoadMore={() => void fetchNextPage()}
+              paginationKey={paginationKey}
+              stories={stories}
+            />
           ) : null}
         </div>
       </Surface>
